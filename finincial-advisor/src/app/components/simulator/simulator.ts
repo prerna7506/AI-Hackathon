@@ -110,27 +110,30 @@ export class SimulatorComponent {
     const years = ['Today', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'];
     const curTotal = this.currentNetWorth5Yrs;
     const simTotal = this.simulatedNetWorth5Yrs;
-    const width = 500;
-    const height = 150;
+    const width = 600;
+    const height = 180;
+    const padX = 35;
+    const padY = 25;
 
     return years.map((label, index) => {
       const ratio = index / (years.length - 1);
-      const cx = 20 + ratio * (width - 40);
+      const cx = padX + ratio * (width - padX * 2);
       
-      const curVal = Math.round((curTotal * (0.1 + ratio * 0.9)));
-      const simVal = Math.round((simTotal * (0.1 + ratio * 0.9 * (index < 2 ? 0.6 : 0.9))));
+      const curVal = Math.round(curTotal * (0.12 + ratio * 0.88));
+      const simRatio = index <= 1 ? ratio : (index === 2 ? 0.75 : 0.85);
+      const simVal = Math.round(simTotal * (0.12 + ratio * simRatio));
 
-      // Map values to Y coordinates (SVG height 150 -> 20)
-      const cyCurrent = height - 20 - (curVal / curTotal) * 110;
-      const cySimulated = height - 20 - (simVal / curTotal) * 110;
+      // Map values to Y coordinates (SVG height 180 -> top padY)
+      const cyCurrent = height - padY - (curVal / curTotal) * (height - padY * 2);
+      const cySimulated = height - padY - (simVal / curTotal) * (height - padY * 2);
 
       return {
         yearLabel: label,
         currentVal: curVal,
         simulatedVal: simVal,
-        cx,
-        cyCurrent,
-        cySimulated
+        cx: Math.round(cx),
+        cyCurrent: Math.round(cyCurrent),
+        cySimulated: Math.round(cySimulated)
       };
     });
   }
@@ -153,7 +156,7 @@ export class SimulatorComponent {
     const pathD = this.currentPathD;
     const lastX = points[points.length - 1].cx;
     const firstX = points[0].cx;
-    return `${pathD} L ${lastX} 150 L ${firstX} 150 Z`;
+    return `${pathD} L ${lastX} 175 L ${firstX} 175 Z`;
   }
 
   get simulatedPathD(): string {

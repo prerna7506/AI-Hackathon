@@ -50,15 +50,60 @@
 
       <!-- Semi Circle Gauge Arc Chart -->
       <div class="gauge-container">
-        <svg class="gauge-svg" viewBox="0 0 200 110">
-          <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#E2E8F0" stroke-width="18" stroke-linecap="round"/>
-          <path class="gauge-fill" d="M 20 100 A 80 80 0 0 1 155 45" fill="none" stroke="#007A65" stroke-width="18" stroke-linecap="round"/>
-          <circle cx="108" cy="41" r="7" fill="#2D3748" />
+        <svg class="gauge-svg" viewBox="0 0 220 135" fill="none">
+          <defs>
+            <linearGradient id="healthGaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#10B981"/>
+              <stop offset="60%" stop-color="#00A389"/>
+              <stop offset="100%" stop-color="#007A65"/>
+            </linearGradient>
+            <filter id="gaugeShadow" x="-10%" y="-10%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#00A389" flood-opacity="0.3"/>
+            </filter>
+            <filter id="knobShadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.25"/>
+            </filter>
+          </defs>
+
+          <!-- Background Track -->
+          <path 
+            class="gauge-bg" 
+            d="M 25 110 A 85 85 0 0 1 195 110" 
+            stroke="#EEF2F6" 
+            stroke-width="14" 
+            stroke-linecap="round"
+          />
+
+          <!-- Active Score Progress Arc (72%) -->
+          <path 
+            class="gauge-fill" 
+            d="M 25 110 A 85 85 0 0 1 164.2 44.5" 
+            stroke="url(#healthGaugeGradient)" 
+            stroke-width="14" 
+            stroke-linecap="round"
+            filter="url(#gaugeShadow)"
+          />
+
+          <!-- Glowing Tip Indicator Knob -->
+          <circle cx="164.2" cy="44.5" r="9" fill="#FFFFFF" filter="url(#knobShadow)"/>
+          <circle cx="164.2" cy="44.5" r="5" fill="#00A389"/>
+
+          <!-- Min/Max Scale Labels -->
+          <text x="25" y="130" text-anchor="middle" fill="#94A3B8" font-size="11" font-weight="700" font-family="inherit">0</text>
+          <text x="195" y="130" text-anchor="middle" fill="#94A3B8" font-size="11" font-weight="700" font-family="inherit">100</text>
         </svg>
 
         <div class="gauge-status">
-          <span class="status-title">{{ healthStatus }}</span>
-          <span class="status-change">{{ healthPointsChange }}</span>
+          <div class="status-pill">
+            <span class="status-dot"></span>
+            <span class="status-title">{{ healthStatus }}</span>
+          </div>
+          <div class="status-change">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00A389" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="18 15 12 9 6 15"/>
+            </svg>
+            <span>{{ healthPointsChange }}</span>
+          </div>
         </div>
       </div>
     </div>

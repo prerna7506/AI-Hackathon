@@ -124,28 +124,52 @@
     align-items: center;
     margin-top: auto;
     position: relative;
+    padding-top: 8px;
 
     .gauge-svg {
       width: 100%;
-      max-width: 220px;
+      max-width: 230px;
+      overflow: visible;
     }
 
     .gauge-status {
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-top: -12px;
+      gap: 6px;
+      margin-top: -8px;
 
-      .status-title {
-        font-size: 0.88rem;
-        font-weight: 800;
-        color: #007A65;
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(0, 163, 137, 0.1);
+        border: 1px solid rgba(0, 163, 137, 0.2);
+        padding: 5px 14px;
+        border-radius: 99px;
+
+        .status-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #00A389;
+          box-shadow: 0 0 8px rgba(0, 163, 137, 0.6);
+        }
+
+        .status-title {
+          font-size: 0.88rem;
+          font-weight: 800;
+          color: #007A65;
+        }
       }
 
       .status-change {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
         font-size: 0.78rem;
-        font-weight: 600;
-        color: var(--text-muted);
+        font-weight: 700;
+        color: #00A389;
       }
     }
   }
