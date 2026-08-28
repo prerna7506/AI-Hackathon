@@ -1,1 +1,67 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --font-primary: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --bg-dark: #0A0D18;
+  --bg-app: #F4F7FD;
+  --bg-card: #FFFFFF;
+  --bg-subtle: #F8FAFC;
+  --bg-blue-light: #EEF4FF;
+
+  --color-primary: #0B4BD6;
+  --color-primary-hover: #083CB0;
+  --color-primary-light: #EBF2FF;
+  
+  --text-main: #0C1938;
+  --text-muted: #5F6D8E;
+  --text-light: #94A3B8;
+
+  --color-mint-bg: #D1FAE5;
+  --color-mint-text: #059669;
+
+  --color-equity: #0B4BD6;
+  --color-debt: #38BDF8;
+  --color-liquid: #9A6A15;
+
+  --border-card: #E5EDF9;
+  --border-outer: rgba(120, 140, 245, 0.4);
+
+  --shadow-sm: 0 2px 8px rgba(12, 25, 56, 0.04);
+  --shadow-md: 0 4px 20px rgba(12, 25, 56, 0.06);
+  --shadow-glow: 0 0 25px rgba(11, 75, 214, 0.15);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 99px;
+}

@@ -1,0 +1,116 @@
+@if (budgetService.isModalOpen()) {
+  <div class="modal-backdrop" (click)="close()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="header-left">
+          <div class="budget-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
+              <path d="M12 12L2.1 12A10 10 0 0 1 12 2v10z"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Monthly Budget Review</h3>
+            <p class="modal-subtitle">Optimize spending caps and surplus reallocation</p>
+          </div>
+        </div>
+        <button class="btn-close" (click)="close()" title="Close">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <!-- Summary Stats Banner -->
+        <div class="budget-summary-banner">
+          <div class="stat-card">
+            <span class="stat-label">Monthly Income</span>
+            <span class="stat-val">{{ formatCurrency(budgetService.monthlyIncome()) }}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Total Allocated</span>
+            <span class="stat-val">{{ formatCurrency(budgetService.totalAllocated()) }}</span>
+          </div>
+          <div class="stat-card highlight">
+            <span class="stat-label">Monthly Surplus</span>
+            <span class="stat-val green">{{ formatCurrency(budgetService.projectedMonthlySavings()) }}</span>
+          </div>
+        </div>
+
+        <!-- AI Insight & Auto-Rebalance Callout -->
+        <div class="ai-rebalance-box">
+          <div class="ai-box-left">
+            <div class="ai-badge">AI RECOMMENDATION</div>
+            <p class="ai-text">
+              Dining spending is currently <strong>18% higher</strong> than usual. Rebalancing ₹5,000 from Dining and ₹3,000 from Leisure will keep your Primary Goal on track.
+            </p>
+          </div>
+          <button class="btn-auto-rebalance" (click)="applySmartRebalance()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+              <polyline points="17 6 23 6 23 12"/>
+            </svg>
+            Auto-Rebalance
+          </button>
+        </div>
+
+        <!-- Category Budget List -->
+        <div class="category-budget-list">
+          <label class="list-heading">Category Allocations & Spending</label>
+
+          @for (cat of budgetService.categories(); track cat.id) {
+            <div class="category-item" [class.alert-border]="cat.isOverBudget">
+              <div class="category-top">
+                <div class="cat-name-box">
+                  <span class="cat-dot" [style.background]="cat.color"></span>
+                  <span class="cat-name">{{ cat.name }}</span>
+                  @if (cat.isOverBudget) {
+                    <span class="overbudget-tag">Over Budget (+₹{{ (cat.spent - cat.allocated).toLocaleString('en-IN') }})</span>
+                  }
+                </div>
+                <div class="cat-amounts">
+                  <span class="spent-text">Spent: <strong>{{ formatCurrency(cat.spent) }}</strong></span>
+                  <span class="cap-text">/ Cap: <strong>{{ formatCurrency(cat.allocated) }}</strong></span>
+                </div>
+              </div>
+
+              <!-- Progress bar showing spent vs allocated -->
+              <div class="cat-progress-track">
+                <div 
+                  class="cat-progress-fill" 
+                  [style.width.%]="cat.allocated > 0 ? (cat.spent / cat.allocated) * 100 : 0"
+                  [style.background]="cat.isOverBudget ? '#EF4444' : cat.color"
+                ></div>
+              </div>
+
+              <!-- Slider to adjust allocation -->
+              <div class="allocation-slider-row">
+                <span class="slider-label">Adjust Cap:</span>
+                <input 
+                  type="range" 
+                  min="5000" 
+                  max="60000" 
+                  step="1000" 
+                  [value]="cat.allocated" 
+                  (input)="onAllocationChange(cat.id, $event)"
+                  class="category-range" 
+                />
+                <span class="slider-val">{{ formatCurrency(cat.allocated) }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="close()">Cancel</button>
+        <button type="button" class="btn-save" (click)="save()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Save Budget Settings
+        </button>
+      </div>
+    </div>
+  </div>
+}

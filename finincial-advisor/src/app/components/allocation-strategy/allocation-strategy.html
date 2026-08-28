@@ -1,0 +1,31 @@
+<div class="allocation-card">
+  <div class="card-header">
+    <div class="header-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B4BD6" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 2a10 10 0 0 1 10 10h-10V2z"/>
+      </svg>
+    </div>
+    <h3 class="card-title">AI Allocation<br>Strategy</h3>
+  </div>
+
+  <div class="allocation-list">
+    @for (item of allocations; track item.name) {
+      <div class="allocation-item">
+        <div class="item-meta">
+          <span class="item-name">
+            <strong>{{ item.name }}</strong> {{ item.subtitle }}
+          </span>
+          <span class="item-percent">{{ item.percentage }}%</span>
+        </div>
+        <div class="item-track">
+          <div 
+            class="item-fill" 
+            [style.width.%]="item.percentage" 
+            [style.background]="item.color"
+          ></div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

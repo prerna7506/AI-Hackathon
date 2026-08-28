@@ -1,0 +1,140 @@
+.primary-goal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 16px;
+  padding: 24px 28px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+
+  .watermark-icon {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    color: #EBF2FF;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .card-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 2;
+
+    .badge-tag {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      color: #059669;
+      text-transform: uppercase;
+    }
+
+    .badge-status {
+      background: var(--color-mint-bg);
+      color: var(--color-mint-text);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 99px;
+    }
+  }
+
+  .goal-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text-main);
+    letter-spacing: -0.5px;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .metrics-row {
+    display: flex;
+    gap: 48px;
+    margin-bottom: 32px;
+    position: relative;
+    z-index: 2;
+
+    .metric-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+
+      .metric-label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      .metric-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-main);
+        letter-spacing: -0.3px;
+      }
+
+      .timeline-box {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+
+        .year-subtext {
+          font-size: 0.88rem;
+          color: var(--text-muted);
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  .progress-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .progress-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--text-muted);
+      }
+
+      .progress-amount {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--color-primary);
+      }
+    }
+
+    .progress-track {
+      height: 12px;
+      background: var(--bg-blue-light);
+      border-radius: 99px;
+      overflow: hidden;
+
+      .progress-fill {
+        height: 100%;
+        background: var(--color-primary);
+        border-radius: 99px;
+        transition: width 0.4s ease;
+      }
+    }
+
+    .progress-milestones {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding-top: 4px;
+    }
+  }
+}

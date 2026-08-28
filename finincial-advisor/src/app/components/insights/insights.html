@@ -1,0 +1,140 @@
+<main class="insights-page">
+  <!-- Top Header Bar -->
+  <header class="page-header">
+    <div class="header-titles">
+      <h1 class="page-title">Smart Insights & Alerts</h1>
+      <p class="page-subtitle">Proactive financial intelligence powered by FinMate AI.</p>
+    </div>
+
+    <div class="header-actions">
+      <button class="icon-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
+      <button class="icon-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <div class="user-avatar-btn" (click)="authService.openModal('profile')" style="cursor: pointer;" title="View Profile"><img [src]="authService.userProfile().avatarUrl" alt="Avatar" /></div>
+    </div>
+  </header>
+
+  <!-- Filter Chips Row -->
+  <div class="filters-chips-row">
+    @for (filter of filters; track filter.id) {
+      <button 
+        class="filter-chip" 
+        [class.active]="filter.selected"
+        (click)="selectFilter(filter.id)"
+      >
+        {{ filter.label }}
+      </button>
+    }
+  </div>
+
+  <!-- Insights Grid Layout -->
+  <div class="insights-grid-layout">
+    <!-- Left Column: Insights Feed Cards -->
+    <div class="feed-column">
+      <!-- Alert Card 1: Spending Alert -->
+      <div class="insight-card red-card">
+        <div class="card-top-bar">
+          <div class="tag-box red-tag">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>SPENDING ALERT</span>
+          </div>
+          <span class="time-stamp">2 hrs ago</span>
+        </div>
+
+        <h3 class="card-headline">Monthly spending increased by 24%</h3>
+        <p class="card-body-text">
+          Your spending in the 'Dining Out' category is unusually high this month compared to your 6-month average.
+        </p>
+
+        <div class="card-buttons-row">
+          <button class="btn-secondary" routerLink="/ai-advisor">Tell Me More</button>
+          <button class="btn-primary-outline" (click)="budgetService.openModal()">Review Budget</button>
+        </div>
+      </div>
+
+      <!-- Alert Card 2: Savings Opportunity -->
+      <div class="insight-card teal-card">
+        <div class="card-top-bar">
+          <div class="tag-box teal-tag">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/></svg>
+            <span>SAVINGS OPPORTUNITY</span>
+          </div>
+          <span class="time-stamp">Yesterday</span>
+        </div>
+
+        <h3 class="card-headline">₹35,000 unused in account</h3>
+        <p class="card-body-text">
+          Consider moving this to your emergency fund to earn up to 4.5% interest, based on your current cash flow projections.
+        </p>
+
+        <div class="card-buttons-row">
+          <button class="btn-solid-blue" routerLink="/simulator">Act Now</button>
+        </div>
+      </div>
+
+      <!-- Alert Card 3: Goal Update -->
+      <div class="insight-card blue-card">
+        <div class="card-top-bar">
+          <div class="tag-box blue-tag">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+            <span>GOAL UPDATE</span>
+          </div>
+          <span class="time-stamp">Yesterday</span>
+        </div>
+
+        <h3 class="card-headline">12% ahead of house target</h3>
+        <p class="card-body-text">
+          Great job! Your recent bonus deposit put you ahead of schedule for your 'Downpayment' goal.
+        </p>
+
+        <div class="card-buttons-row">
+          <button class="btn-secondary" routerLink="/goals">View Goals</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Monthly Summary & AI Insights Trigger -->
+    <div class="side-summary-column">
+      <!-- Monthly Summary Card -->
+      <div class="summary-card">
+        <h4 class="summary-title">Monthly Summary</h4>
+
+        <div class="summary-item">
+          <div class="meta-row">
+            <span class="label">Total Inflow</span>
+            <span class="badge green-badge">↑ 5%</span>
+          </div>
+          <span class="value">{{ totalInflow }}</span>
+        </div>
+
+        <div class="summary-item">
+          <div class="meta-row">
+            <span class="label">Total Outflow</span>
+            <span class="badge red-badge">↑ 24%</span>
+          </div>
+          <span class="value">{{ totalOutflow }}</span>
+        </div>
+
+        <div class="summary-item">
+          <span class="label">Net Savings</span>
+          <span class="value blue-value">{{ netSavings }}</span>
+        </div>
+      </div>
+
+      <!-- Deeper Insights Promo Card -->
+      <div class="deeper-insights-card">
+        <div class="promo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="10" rx="2"/>
+            <circle cx="12" cy="5" r="2"/>
+            <path d="M12 7v4"/>
+          </svg>
+        </div>
+
+        <h4 class="promo-title">Need deeper insights?</h4>
+        <p class="promo-desc">Ask FinMate AI to analyze your spending patterns in detail.</p>
+
+        <button class="btn-analysis" routerLink="/ai-advisor">Start Analysis</button>
+      </div>
+    </div>
+  </div>
+</main>

@@ -1,0 +1,130 @@
+.portfolio-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .section-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+
+  .portfolio-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .portfolio-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-card);
+      border-radius: 14px;
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+
+      &:hover {
+        border-color: rgba(11, 75, 214, 0.4);
+        transform: translateY(-1px);
+
+        .card-header .btn-delete-goal {
+          opacity: 0.7;
+        }
+      }
+
+      &.selected {
+        border-color: var(--color-primary);
+        box-shadow: 0 4px 16px rgba(11, 75, 214, 0.12);
+        background: #FFFFFF;
+      }
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+
+        .goal-badge {
+          width: 36px;
+          height: 36px;
+          border-radius: 8px;
+          background: var(--bg-blue-light);
+          color: var(--color-primary);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          &.selected {
+            background: var(--color-primary);
+            color: #FFFFFF;
+          }
+        }
+
+        .goal-title {
+          font-size: 1rem;
+          font-weight: 800;
+          color: var(--text-main);
+          flex: 1;
+        }
+
+        .btn-delete-goal {
+          opacity: 0.4;
+          background: transparent;
+          border: none;
+          color: var(--text-muted);
+          cursor: pointer;
+          padding: 6px;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+
+          &:hover {
+            opacity: 1 !important;
+            background: #FEE2E2;
+            color: #DC2626;
+            transform: scale(1.08);
+          }
+        }
+      }
+
+      .card-body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .goal-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          .target-text {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-muted);
+          }
+
+          .percentage-text {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--text-main);
+          }
+        }
+
+        .progress-track {
+          height: 6px;
+          background: var(--bg-blue-light);
+          border-radius: 99px;
+          overflow: hidden;
+
+          .progress-fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 0.3s ease;
+          }
+        }
+      }
+    }
+  }
+}

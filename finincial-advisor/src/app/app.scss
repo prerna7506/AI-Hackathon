@@ -1,0 +1,54 @@
+.app-layout {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  background: var(--bg-app);
+  overflow: hidden;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+.global-toast-notification {
+  position: fixed;
+  top: 24px;
+  right: 28px;
+  z-index: 10000;
+  animation: slideInToast 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+  .toast-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #0F172A;
+    color: #FFFFFF;
+    padding: 14px 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    font-size: 0.88rem;
+    font-weight: 700;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    svg {
+      flex-shrink: 0;
+    }
+  }
+}
+
+@keyframes slideInToast {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

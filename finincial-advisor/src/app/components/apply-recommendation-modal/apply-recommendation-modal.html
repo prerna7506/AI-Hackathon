@@ -1,0 +1,146 @@
+@if (goalsService.isRecommendationModalOpen()) {
+  <div class="modal-backdrop" (click)="close()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="header-left">
+          <div class="ai-spark-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Apply AI Recommendation</h3>
+            <p class="modal-subtitle">
+              Tailored strategy for <strong>{{ activeGoal() ? activeGoal()!.title : 'Selected Goal' }}</strong>
+            </p>
+          </div>
+        </div>
+        <button class="btn-close" (click)="close()" title="Close modal">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <!-- Goal Overview Banner -->
+        @if (activeGoal(); as goal) {
+          <div class="goal-highlight-banner">
+            <div class="banner-badge">Target: ₹{{ goal.targetAmount.toLocaleString('en-IN') }}</div>
+            <div class="banner-timeline">{{ goal.timelineYears }} Years (Target: {{ goal.targetYear }})</div>
+          </div>
+        }
+
+        <!-- Impact Summary Pills -->
+        <div class="impact-metrics-grid">
+          <div class="impact-card">
+            <span class="impact-icon">⚡</span>
+            <div class="impact-info">
+              <span class="impact-label">Timeline Boost</span>
+              <span class="impact-val">-{{ estimatedMonthsSaved() }} Months</span>
+            </div>
+          </div>
+          <div class="impact-card">
+            <span class="impact-icon">📈</span>
+            <div class="impact-info">
+              <span class="impact-label">Compounding Gain</span>
+              <span class="impact-val">+{{ estimatedGains() }}</span>
+            </div>
+          </div>
+          <div class="impact-card">
+            <span class="impact-icon">🎯</span>
+            <div class="impact-info">
+              <span class="impact-label">Confidence</span>
+              <span class="impact-val high">96% High</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly Contribution Optimization -->
+        <div class="section-group">
+          <div class="section-label-row">
+            <label>Suggested Monthly SIP Boost</label>
+            <span class="boost-display">+₹{{ boostAmount.toLocaleString('en-IN') }}/month</span>
+          </div>
+
+          <!-- Quick Select Buttons -->
+          <div class="quick-amounts-grid">
+            @for (opt of quickAmounts; track opt.value) {
+              <button 
+                type="button" 
+                class="quick-amount-btn" 
+                [class.active]="boostAmount === opt.value"
+                (click)="selectQuickAmount(opt.value)"
+              >
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+
+          <!-- Range Slider for Fine Adjustment -->
+          <div class="slider-wrapper">
+            <input 
+              type="range" 
+              min="1000" 
+              max="25000" 
+              step="1000" 
+              [(ngModel)]="boostAmount" 
+              class="custom-range"
+            />
+            <div class="range-endpoints">
+              <span>₹1,000/mo</span>
+              <span>₹25,000/mo</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Strategy Options -->
+        <div class="section-group">
+          <label class="section-heading">Recommended Rebalancing Strategy</label>
+          <div class="strategy-list">
+            @for (strat of strategies; track strat.id) {
+              <div 
+                class="strategy-card" 
+                [class.selected]="selectedStrategy === strat.id"
+                (click)="selectedStrategy = strat.id"
+              >
+                <div class="radio-circle">
+                  <div class="radio-inner" *ngIf="selectedStrategy === strat.id"></div>
+                </div>
+                <div class="strategy-details">
+                  <div class="strat-title-row">
+                    <span class="strat-name">{{ strat.name }}</span>
+                    <span class="strat-badge" [class.recommended]="strat.badge === 'Recommended'">
+                      {{ strat.badge }}
+                    </span>
+                  </div>
+                  <p class="strat-desc">{{ strat.desc }}</p>
+                  <span class="strat-returns">Est. Returns: <strong>{{ strat.expectedReturn }}</strong></span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="close()">Cancel</button>
+        <button 
+          type="button" 
+          class="btn-apply-action" 
+          [disabled]="isApplying()" 
+          (click)="onApply()"
+        >
+          @if (isApplying()) {
+            <span class="loading-spinner"></span>
+            Applying...
+          } @else {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Confirm & Apply Recommendation
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

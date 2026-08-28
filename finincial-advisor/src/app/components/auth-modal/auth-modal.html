@@ -1,0 +1,176 @@
+@if (authService.isModalOpen()) {
+  <div class="modal-backdrop" (click)="close()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="brand-badge">
+          <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+            <rect width="32" height="32" rx="8" fill="#0B4BD6"/>
+            <path d="M10 21L16 9L22 21H18L16 16.5L14 21H10Z" fill="white"/>
+          </svg>
+          <span>FinMate AI Account</span>
+        </div>
+
+        <button class="btn-close" (click)="close()">✕</button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="modal-tabs">
+        <button 
+          class="tab-btn" 
+          [class.active]="authService.activeTab() === 'profile'"
+          (click)="switchTab('profile')"
+        >
+          My Profile
+        </button>
+
+        <button 
+          class="tab-btn" 
+          [class.active]="authService.activeTab() === 'auth'"
+          (click)="switchTab('auth')"
+        >
+          {{ authService.isLoggedIn() ? 'Account Auth' : 'Sign In / Register' }}
+        </button>
+
+        <button 
+          class="tab-btn" 
+          [class.active]="authService.activeTab() === 'billing'"
+          (click)="switchTab('billing')"
+        >
+          Billing & Plan
+        </button>
+      </div>
+
+      <!-- Modal Body Content based on Active Tab -->
+      <div class="modal-body">
+        <!-- TAB 1: MY PROFILE -->
+        @if (authService.activeTab() === 'profile') {
+          <div class="tab-content profile-tab">
+            <div class="user-hero-box">
+              <div class="avatar-ring">
+                <img [src]="authService.userProfile().avatarUrl" alt="Avatar" />
+              </div>
+              <div class="user-info">
+                <h3 class="user-name">{{ authService.userProfile().name }}</h3>
+                <span class="user-email">{{ authService.userProfile().email }}</span>
+                <span class="plan-pill">{{ authService.userProfile().plan }}</span>
+              </div>
+            </div>
+
+            <div class="profile-stats-grid">
+              <div class="stat-card">
+                <span class="stat-title">Health Score</span>
+                <span class="stat-value green-text">{{ authService.userProfile().healthScore }}/100</span>
+              </div>
+
+              <div class="stat-card">
+                <span class="stat-title">Currency</span>
+                <span class="stat-value">{{ authService.userProfile().currency }}</span>
+              </div>
+            </div>
+
+            <div class="preferences-section">
+              <h4 class="section-subtitle">Account Preferences</h4>
+              
+              <div class="pref-row">
+                <div class="pref-info">
+                  <span class="pref-label">AI Daily Digest</span>
+                  <span class="pref-sub">Receive daily spending insights via email</span>
+                </div>
+                <input type="checkbox" checked class="toggle-checkbox" />
+              </div>
+
+              <div class="pref-row">
+                <div class="pref-info">
+                  <span class="pref-label">Smart Goal Alerts</span>
+                  <span class="pref-sub">Get notified when goal targets are reached</span>
+                </div>
+                <input type="checkbox" checked class="toggle-checkbox" />
+              </div>
+            </div>
+
+            <button class="btn-logout" (click)="onLogout()">Sign Out</button>
+          </div>
+        }
+
+        <!-- TAB 2: LOGIN / SIGNUP -->
+        @if (authService.activeTab() === 'auth') {
+          <div class="tab-content auth-tab">
+            <h3 class="auth-title">
+              {{ authMode === 'login' ? 'Welcome Back to FinMate AI' : 'Create Your FinMate Account' }}
+            </h3>
+            <p class="auth-sub">Access your personal financial health metrics and AI advisor.</p>
+
+            <!-- Google OAuth Button -->
+            <button class="btn-google" (click)="loginWithGoogle()">
+              <svg width="18" height="18" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.29v3.15C3.26 21.3 7.31 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.28 14.27a7.22 7.22 0 0 1 0-4.54V6.58H1.29a11.98 11.98 0 0 0 0 10.84l3.99-3.15z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.58l3.99 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+              </svg>
+              <span>Continue with Google</span>
+            </button>
+
+            <div class="or-divider">
+              <span>or connect with email</span>
+            </div>
+
+            <!-- Email & Password Form -->
+            <form class="auth-form" (ngSubmit)="onSubmitEmailAuth()">
+              @if (authMode === 'signup') {
+                <div class="form-group">
+                  <label>Full Name</label>
+                  <input type="text" placeholder="John Doe" [(ngModel)]="nameInput" name="name" required />
+                </div>
+              }
+
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" placeholder="name@example.com" [(ngModel)]="emailInput" name="email" required />
+              </div>
+
+              <div class="form-group">
+                <label>Password</label>
+                <input type="password" placeholder="••••••••" [(ngModel)]="passwordInput" name="password" required />
+              </div>
+
+              <button type="submit" class="btn-submit">
+                {{ authMode === 'login' ? 'Sign In' : 'Create Account' }}
+              </button>
+            </form>
+
+            <div class="auth-toggle-footer">
+              <span>{{ authMode === 'login' ? "Don't have an account?" : 'Already have an account?' }}</span>
+              <button class="link-toggle" (click)="toggleAuthMode()">
+                {{ authMode === 'login' ? 'Sign Up' : 'Log In' }}
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- TAB 3: BILLING & PLAN -->
+        @if (authService.activeTab() === 'billing') {
+          <div class="tab-content billing-tab">
+            <div class="plan-hero-card">
+              <div class="plan-top">
+                <div>
+                  <span class="plan-label">CURRENT PLAN</span>
+                  <h3 class="plan-title">FinMate Pro AI</h3>
+                </div>
+                <span class="price-tag">₹499 / mo</span>
+              </div>
+
+              <p class="plan-desc">Unlimited AI Advisor chats, real-time What-If simulations, and smart portfolio alerts.</p>
+              
+              <div class="renews-row">
+                <span>Renews on <strong>Sept 28, 2026</strong></span>
+                <button class="btn-manage">Manage</button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,76 @@
+.allocation-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 24px;
+
+    .header-icon {
+      margin-top: 2px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.25;
+    }
+  }
+
+  .allocation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 1;
+    justify-content: center;
+
+    .allocation-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+
+      .item-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .item-name {
+          font-size: 0.8rem;
+          color: var(--text-muted);
+          strong {
+            color: var(--text-main);
+            font-weight: 700;
+          }
+        }
+
+        .item-percent {
+          font-size: 0.82rem;
+          font-weight: 800;
+          color: var(--text-main);
+        }
+      }
+
+      .item-track {
+        height: 7px;
+        background: var(--bg-blue-light);
+        border-radius: 99px;
+        overflow: hidden;
+
+        .item-fill {
+          height: 100%;
+          border-radius: 99px;
+          transition: width 0.3s ease;
+        }
+      }
+    }
+  }
+}

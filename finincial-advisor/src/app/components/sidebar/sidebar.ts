@@ -1,0 +1,38 @@
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+
+interface NavItem {
+  id: string;
+  label: string;
+  icon: string;
+  route: string;
+}
+
+@Component({
+  selector: 'app-sidebar',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './sidebar.html',
+  styleUrl: './sidebar.scss'
+})
+export class SidebarComponent {
+  authService = inject(AuthService);
+
+  navItems: NavItem[] = [
+    { id: 'dashboard', label: 'Dashboard', icon: 'grid', route: '/dashboard' },
+    { id: 'advisor', label: 'AI Advisor', icon: 'bot', route: '/ai-advisor' },
+    { id: 'goals', label: 'Goals', icon: 'flag', route: '/goals' },
+    { id: 'insights', label: 'Insights', icon: 'bulb', route: '/insights' },
+    { id: 'simulator', label: 'Simulator', icon: 'trending', route: '/simulator' }
+  ];
+
+  openProfile(): void {
+    this.authService.openModal('profile');
+  }
+
+  openAuth(): void {
+    this.authService.openModal('auth');
+  }
+}

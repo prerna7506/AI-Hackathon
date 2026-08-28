@@ -1,0 +1,412 @@
+.dashboard-page {
+  padding: 32px 36px 80px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  background: var(--bg-app);
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .header-titles {
+    .page-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.8px;
+      margin-bottom: 6px;
+    }
+
+    .page-subtitle {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 1px solid var(--border-card);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: var(--bg-blue-light);
+        color: var(--color-primary);
+      }
+    }
+
+    .user-avatar-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid var(--color-primary);
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+  }
+}
+
+.dashboard-grid-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 24px;
+}
+
+.health-score-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-card);
+  border-radius: 18px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    .card-label {
+      font-size: 0.76rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+  }
+
+  .score-display {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+
+    .score-number {
+      font-size: 3.8rem;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -1.5px;
+      line-height: 1;
+    }
+
+    .score-total {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+  }
+
+  .gauge-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: auto;
+    position: relative;
+
+    .gauge-svg {
+      width: 100%;
+      max-width: 220px;
+    }
+
+    .gauge-status {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: -12px;
+
+      .status-title {
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: #007A65;
+      }
+
+      .status-change {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+    }
+  }
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+
+  .metric-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border-card);
+    border-radius: 18px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: var(--shadow-sm);
+
+    &.flex-center {
+      align-items: center;
+      text-align: center;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 16px;
+      color: var(--text-muted);
+
+      .card-title {
+        font-size: 0.74rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+      }
+    }
+
+    .item-bar-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+
+      .bar-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.84rem;
+
+        .label { color: var(--text-muted); font-weight: 600; }
+        .value { color: var(--text-main); font-weight: 800; }
+      }
+
+      .bar-track {
+        height: 8px;
+        background: var(--bg-blue-light);
+        border-radius: 99px;
+        overflow: hidden;
+
+        .bar-fill {
+          height: 100%;
+          border-radius: 99px;
+          &.blue-fill { background: var(--color-primary); }
+          &.brown-fill { background: var(--color-liquid); }
+        }
+      }
+    }
+
+    .trend-footer {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+
+      &.green-trend {
+        color: #007A65;
+      }
+    }
+
+    .savings-amount-box, .loan-amount-box {
+      margin-bottom: 12px;
+
+      .big-amount {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--text-main);
+        letter-spacing: -0.5px;
+      }
+
+      .ytd-badge {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #007A65;
+      }
+
+      .sub-label {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+    }
+
+    .sparkline-chart {
+      width: 100%;
+      height: 44px;
+
+      svg {
+        width: 100%;
+        height: 100%;
+      }
+    }
+
+    .loan-item-box {
+      background: var(--bg-blue-light);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .loan-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #FFFFFF;
+        color: var(--color-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .loan-details {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+
+        .name { font-size: 0.8rem; font-weight: 800; color: var(--text-main); }
+        .schedule { font-size: 0.72rem; color: var(--text-muted); }
+      }
+
+      .loan-value {
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: var(--text-main);
+      }
+    }
+
+    .ring-chart-container {
+      position: relative;
+      width: 90px;
+      height: 90px;
+      margin: 8px 0;
+
+      .ring-svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+
+      .ring-text {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        span {
+          font-size: 1.15rem;
+          font-weight: 800;
+          color: var(--text-main);
+        }
+      }
+    }
+
+    .ahead-pill {
+      background: var(--color-mint-bg);
+      color: var(--color-mint-text);
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 99px;
+    }
+  }
+}
+
+.insight-banner {
+  background: linear-gradient(135deg, #B5C9EB 0%, #8EAADB 100%);
+  border-radius: 16px;
+  padding: 24px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-sm);
+
+  .banner-left {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+
+    .banner-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.4);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .banner-text {
+      max-width: 650px;
+
+      .banner-title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #FFFFFF;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #007A65;
+        }
+      }
+
+      .banner-desc {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.95);
+        line-height: 1.45;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .btn-review-budget {
+    padding: 10px 20px;
+    background: #FFFFFF;
+    color: var(--text-main);
+    font-weight: 700;
+    font-size: 0.84rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: var(--bg-blue-light);
+      color: var(--color-primary);
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .dashboard-grid-layout {
+    grid-template-columns: 1fr;
+  }
+}

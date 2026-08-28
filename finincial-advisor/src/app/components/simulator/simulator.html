@@ -1,0 +1,279 @@
+<main class="simulator-page">
+  <!-- Top Header Bar -->
+  <header class="page-header">
+    <div class="header-titles">
+      <h1 class="page-title">What-If Simulator</h1>
+      <p class="page-subtitle">Explore projected outcomes by adjusting your financial parameters and testing scenarios.</p>
+    </div>
+
+    <div class="header-right">
+      <div class="search-bar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search..." />
+      </div>
+
+      <div class="header-actions">
+        <button class="icon-btn" title="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
+        <button class="icon-btn" title="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+        <div class="user-avatar-btn" (click)="authService.openModal('profile')" style="cursor: pointer;" title="View Profile"><img [src]="authService.userProfile().avatarUrl" alt="Avatar" /></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Grid Layout -->
+  <div class="simulator-grid-layout">
+    <!-- Left Column: Controls (Scenarios & Sliders) -->
+    <div class="controls-column">
+      <!-- Quick Scenarios Card -->
+      <div class="card scenarios-card">
+        <h4 class="card-section-title">QUICK SCENARIOS</h4>
+
+        <div class="scenarios-list">
+          @for (sc of scenarios; track sc.id) {
+            <button 
+              class="scenario-btn" 
+              [class.selected]="sc.selected"
+              (click)="selectScenario(sc.id)"
+            >
+              <div class="btn-left">
+                @if (sc.id === 'job_loss') {
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
+                } @else if (sc.id === 'home_purchase') {
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                } @else if (sc.id === 'sabbatical') {
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.2c.3.4.8.5 1.3.3l.5-.3c.4-.2.6-.6.5-1.1z"/></svg>
+                }
+                <span>{{ sc.title }}</span>
+              </div>
+              
+              @if (sc.selected) {
+                <div class="check-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+              }
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Base Parameters Sliders Card -->
+      <div class="card sliders-card">
+        <div class="sliders-header">
+          <h4 class="card-section-title">BASE PARAMETERS</h4>
+          <button class="btn-reset" (click)="resetParameters()">Reset</button>
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label-row">
+            <span class="label">Monthly Income</span>
+            <span class="value">₹{{ monthlyIncome | number }}</span>
+          </div>
+          <input 
+            type="range" 
+            min="50000" 
+            max="300000" 
+            step="5000" 
+            [(ngModel)]="monthlyIncome" 
+            (ngModelChange)="onIncomeChange()"
+            class="custom-range" 
+          />
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label-row">
+            <span class="label">Monthly Expenses</span>
+            <span class="value">₹{{ monthlyExpenses | number }}</span>
+          </div>
+          <input 
+            type="range" 
+            min="20000" 
+            max="150000" 
+            step="2500" 
+            [(ngModel)]="monthlyExpenses" 
+            (ngModelChange)="onExpensesChange()"
+            class="custom-range" 
+          />
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label-row">
+            <span class="label">Monthly Savings</span>
+            <span class="value">₹{{ monthlySavings | number }}</span>
+          </div>
+          <input 
+            type="range" 
+            min="5000" 
+            max="150000" 
+            step="2500" 
+            [(ngModel)]="monthlySavings" 
+            class="custom-range" 
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Scenario Analysis & Projections -->
+    <div class="analysis-column">
+      <!-- Scenario Analysis Hero Card -->
+      <div class="scenario-hero-card">
+        <div class="hero-top">
+          <div class="hero-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B4BD6" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div class="hero-title-box">
+            <h3>Scenario Analysis: {{ selectedScenario.title }}</h3>
+            <p>{{ selectedScenario.description }}</p>
+          </div>
+        </div>
+
+        <div class="coverage-metrics-row">
+          <div class="coverage-box">
+            <span class="box-title">CURRENT COVERAGE</span>
+            <span class="box-value red-value">{{ currentCoverageMonths }} Months (₹2,25,000)</span>
+          </div>
+          <div class="coverage-box">
+            <span class="box-title">REQUIRED COVERAGE (6 MO)</span>
+            <span class="box-value">₹{{ requiredCoverageAmount | number }}</span>
+          </div>
+        </div>
+
+        <div class="recommendation-pill-box">
+          <div class="rec-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00A389" stroke-width="2.5"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/></svg>
+          </div>
+          <p class="rec-text">
+            <strong>Recommendation:</strong> Increase automated transfers to your emergency fund by <strong>₹15,000/mo</strong> to reach the target safely.
+          </p>
+        </div>
+      </div>
+
+      <!-- Path Comparison Grid (2 Cards Side by Side) -->
+      <div class="paths-comparison-grid">
+        <!-- Current Financial Path -->
+        <div class="path-card">
+          <h4 class="path-title blue-title">CURRENT FINANCIAL PATH</h4>
+
+          <div class="path-metric">
+            <span class="meta-label">Projected Net Worth (5 Yrs)</span>
+            <span class="meta-value">₹{{ currentNetWorth5Yrs | number }}</span>
+          </div>
+
+          <div class="path-meta-row">
+            <span class="meta-label">House Downpayment Goal</span>
+            <span class="date-badge blue-badge">{{ currentGoalDate }}</span>
+          </div>
+
+          <div class="path-meta-row">
+            <span class="meta-label">Financial Independence</span>
+            <span class="age-badge">Age {{ currentFiAge }}</span>
+          </div>
+        </div>
+
+        <!-- Simulated Path (Selected Scenario) -->
+        <div class="path-card brown-border">
+          <h4 class="path-title brown-title">SIMULATED PATH ({{ selectedScenario.title | uppercase }})</h4>
+
+          <div class="path-metric">
+            <span class="meta-label">Projected Net Worth (5 Yrs)</span>
+            <div class="val-with-down">
+              <span class="meta-value">₹{{ simulatedNetWorth5Yrs | number }}</span>
+              <span class="down-tag">↓{{ dropPercentage }}%</span>
+            </div>
+          </div>
+
+          <div class="path-meta-row">
+            <span class="meta-label">House Downpayment Goal</span>
+            <span class="date-badge brown-badge">{{ simulatedGoalDate }}</span>
+          </div>
+
+          <div class="path-meta-row">
+            <span class="meta-label">Financial Independence</span>
+            <span class="age-badge">Age {{ simulatedFiAge }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wealth Projection Timeline Chart Card -->
+      <div class="card chart-card">
+        <div class="chart-header">
+          <h4 class="card-section-title">Wealth Projection Timeline</h4>
+          <div class="chart-legend">
+            <span class="legend-item"><span class="dot blue-dot"></span> Current Path</span>
+            <span class="legend-item"><span class="dot brown-dot"></span> Simulated Path</span>
+          </div>
+        </div>
+
+        <div class="timeline-svg-wrapper">
+          <svg viewBox="0 0 500 160" preserveAspectRatio="none" class="timeline-svg">
+            <defs>
+              <linearGradient id="currentGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#0B4BD6" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#0B4BD6" stop-opacity="0.02"/>
+              </linearGradient>
+              <filter id="glowBlue" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2.5" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+
+            <!-- Area Fill under Current Path -->
+            <path [attr.d]="currentAreaD" fill="url(#currentGrad)"/>
+
+            <!-- Current Path Curve -->
+            <path [attr.d]="currentPathD" fill="none" stroke="#0B4BD6" stroke-width="3.5" stroke-linecap="round" filter="url(#glowBlue)"/>
+
+            <!-- Simulated Path Dashed Curve -->
+            <path [attr.d]="simulatedPathD" fill="none" stroke="#9A6A15" stroke-width="2.5" stroke-dasharray="6,4"/>
+
+            <!-- Event Marker Vertical Line -->
+            <line x1="120" y1="30" x2="120" y2="145" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="3,3"/>
+            <circle cx="120" cy="125" r="4.5" fill="#EF4444"/>
+
+            <g transform="translate(75, 25)">
+              <rect x="0" y="0" width="105" height="24" rx="6" fill="#FEE2E2" stroke="#FCA5A5" stroke-width="1"/>
+              <text x="52" y="16" text-anchor="middle" font-size="10" font-weight="800" fill="#991B1B">Event: {{ selectedScenario.title }}</text>
+            </g>
+
+            <!-- Interactive Data Points -->
+            @for (pt of chartPoints; track pt.yearLabel) {
+              <g 
+                class="chart-node"
+                (mouseenter)="activeHoverPoint = pt"
+                (mouseleave)="activeHoverPoint = null"
+              >
+                <!-- Current node -->
+                <circle [attr.cx]="pt.cx" [attr.cy]="pt.cyCurrent" r="5" fill="#0B4BD6" stroke="#FFFFFF" stroke-width="2"/>
+                <!-- Simulated node -->
+                <circle [attr.cx]="pt.cx" [attr.cy]="pt.cySimulated" r="4" fill="#9A6A15" stroke="#FFFFFF" stroke-width="1.5"/>
+              </g>
+            }
+          </svg>
+
+          <!-- Hover Tooltip -->
+          @if (activeHoverPoint) {
+            <div class="chart-tooltip-box" [style.left.px]="activeHoverPoint.cx">
+              <span class="tooltip-title">{{ activeHoverPoint.yearLabel }}</span>
+              <div class="tooltip-row">
+                <span class="dot blue-dot"></span>
+                <span>Current: <strong>₹{{ activeHoverPoint.currentVal | number }}</strong></span>
+              </div>
+              <div class="tooltip-row">
+                <span class="dot brown-dot"></span>
+                <span>Simulated: <strong>₹{{ activeHoverPoint.simulatedVal | number }}</strong></span>
+              </div>
+            </div>
+          }
+
+          <div class="timeline-years">
+            <span>Today</span>
+            <span>Year 1</span>
+            <span>Year 2</span>
+            <span>Year 3</span>
+            <span>Year 4</span>
+            <span>Year 5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
