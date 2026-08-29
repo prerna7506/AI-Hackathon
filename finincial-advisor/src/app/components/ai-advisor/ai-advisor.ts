@@ -2,6 +2,7 @@ import { Component, ElementRef, ViewChild, AfterViewChecked, OnInit, OnDestroy, 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WorkflowService } from '../../services/ai-advisor.service';
+import { MarkdownPipe } from '../../pipes/markdown.pipe';
 
 interface ChatMessage {
   id: string;
@@ -24,12 +25,13 @@ interface TopicThread {
 @Component({
   selector: 'app-ai-advisor',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MarkdownPipe],
   templateUrl: './ai-advisor.html',
   styleUrl: './ai-advisor.scss'
 })
 export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild('chatViewport') private chatViewport!: ElementRef;
+  @ViewChild('messageTextarea') private messageTextarea?: ElementRef<HTMLTextAreaElement>;
   private cdr = inject(ChangeDetectorRef);
   private aiService = inject(WorkflowService);
 
@@ -74,12 +76,17 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
       id: newId,
       title: 'New Chat',
       subtext: 'Just started',
-      prompts: ['Review my portfolio', 'How much can I invest monthly?', 'Retirement Planning'],
+      prompts: [
+        'Can I afford a car for ₹8 Lakh?',
+        'Can I buy an iPhone for ₹1.5 Lakh?',
+        'Can I afford a ₹50 Lakh home loan?',
+        'Can I afford a ₹2 Lakh vacation?'
+      ],
       messages: [
         {
           id: `bot-start-${Date.now()}`,
           sender: 'bot',
-          text: 'Hello! I am your FinMate AI Financial Partner. How can I assist you with your wealth, budget, or investment goals today?',
+          text: 'Hello! I am your FinMate Financial Decision Advisor. Tell me about any purchase or financial decision you are planning, and I will help you answer: "Can I afford this?"',
           timestamp: this.getFormattedTime()
         }
       ]
@@ -110,6 +117,27 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
   triggerFileInput(): void {
     const fileInput = document.getElementById('hiddenFileInput') as HTMLInputElement;
     if (fileInput) fileInput.click();
+  }
+
+  adjustTextareaHeight(event?: Event): void {
+    const textarea = event ? (event.target as HTMLTextAreaElement) : this.messageTextarea?.nativeElement;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.max(textarea.scrollHeight, 24)}px`;
+    }
+  }
+
+  onTextareaKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.sendMessage();
+    }
+  }
+
+  resetTextareaHeight(): void {
+    if (this.messageTextarea?.nativeElement) {
+      this.messageTextarea.nativeElement.style.height = 'auto';
+    }
   }
 
   sendMessage(customText?: string): void {
@@ -144,6 +172,7 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     if (!customText) {
       this.newMessage = '';
+      this.resetTextareaHeight();
     }
 
     this.isLoading = true;

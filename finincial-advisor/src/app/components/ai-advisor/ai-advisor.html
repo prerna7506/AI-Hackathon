@@ -63,7 +63,7 @@
               </div>
             } @else {
               <div class="bubble bot-bubble">
-                <p class="bubble-text">{{ msg.text }}</p>
+                <div class="bubble-content" [innerHTML]="msg.text | markdown"></div>
 
                 @if (msg.showChart) {
                   <!-- Embedded Projected Monthly Cash Flow Bar Chart Card -->
@@ -97,7 +97,7 @@
                 </div>
               }
               @if (msg.text) {
-                <p class="bubble-text">{{ msg.text }}</p>
+                <div class="bubble-content user-bubble-content" [innerHTML]="msg.text | markdown"></div>
               }
               @if (msg.timestamp) {
                 <span class="msg-timestamp user-time">{{ msg.timestamp }}</span>
@@ -145,14 +145,16 @@
           </svg>
         </button>
 
-        <input 
-          type="text" 
-          class="chat-input" 
+        <textarea 
+          #messageTextarea
+          rows="1"
+          class="chat-input chat-textarea" 
           placeholder="Ask FinMate..." 
           [(ngModel)]="newMessage" 
-          (keyup.enter)="sendMessage()"
+          (input)="adjustTextareaHeight($event)"
+          (keydown)="onTextareaKeyDown($event)"
           [disabled]="isLoading"
-        />
+        ></textarea>
 
         <button
           class="btn-send"
