@@ -13,13 +13,7 @@ import { AuthService } from '../../services/auth.service';
 export class AuthModalComponent {
   authService = inject(AuthService);
 
-  authMode: 'login' | 'signup' = 'login';
-
-  emailInput = '';
-  passwordInput = '';
-  nameInput = '';
-
-  switchTab(tab: 'profile' | 'auth' | 'billing'): void {
+  switchTab(tab: 'profile' | 'auth'): void {
     this.authService.activeTab.set(tab);
   }
 
@@ -27,23 +21,8 @@ export class AuthModalComponent {
     this.authService.closeModal();
   }
 
-  toggleAuthMode(): void {
-    this.authMode = this.authMode === 'login' ? 'signup' : 'login';
-  }
-
   loginWithGoogle(): void {
     this.authService.loginWithGoogle();
-  }
-
-  onSubmitEmailAuth(): void {
-    if (!this.emailInput) return;
-    this.authService.userProfile.update(prof => ({
-      ...prof,
-      name: this.nameInput || prof.name,
-      email: this.emailInput
-    }));
-    this.authService.isLoggedIn.set(true);
-    this.authService.activeTab.set('profile');
   }
 
   onLogout(): void {
