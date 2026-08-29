@@ -21,7 +21,7 @@ export interface UserProfile {
   email: string;
   avatarUrl: string;
   memberSince: string;
-  memberTill: string;
+  memberTill?: string;
   membershipStatus: string;
   activeFeatures: AppFeature[];
 }
@@ -51,7 +51,6 @@ function getInitialProfile(): UserProfile {
     email: 'guest@finmate.ai',
     avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
     memberSince: 'August 2026',
-    memberTill: 'December 31, 2026',
     membershipStatus: 'Active Pro Access',
     activeFeatures: [
       {
@@ -131,7 +130,6 @@ export class AuthService {
         user.photoURL ||
         'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
       memberSince: memberSinceFormatted,
-      memberTill: 'December 31, 2026',
       membershipStatus: 'Active Pro Access',
       activeFeatures: [
         {
@@ -207,7 +205,6 @@ export class AuthService {
         email: 'guest@finmate.ai',
         avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
         memberSince: 'August 2026',
-        memberTill: 'December 31, 2026',
         membershipStatus: 'Active Pro Access',
         activeFeatures: [
           {
