@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewChecked, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -27,68 +27,31 @@ interface TopicThread {
   templateUrl: './ai-advisor.html',
   styleUrl: './ai-advisor.scss'
 })
-export class AiAdvisorComponent implements AfterViewChecked {
+export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild('chatViewport') private chatViewport!: ElementRef;
+  private cdr = inject(ChangeDetectorRef);
 
-  activeTopicId = 'car-analysis';
+  activeTopicId = '';
   attachedFileName: string | null = null;
+  attachedFile: File | null = null;
   newMessage = '';
   shouldScrollToBottom = false;
+  isLoading = false;
+  private activeTimer: any = null;
+  private currentTypingMsgId: string | null = null;
 
-  topics: TopicThread[] = [
-    {
-      id: 'car-analysis',
-      title: 'Car Purchase Analysis',
-      subtext: 'Based on your cash flow',
-      prompts: ['Can I afford a car?', 'Analyze my spending', 'Increase down payment to 20%'],
-      messages: [
-        {
-          id: 'msg-1',
-          sender: 'bot',
-          text: 'Based on your current finances, purchasing the car next year may put pressure on your monthly cash flow. Here is a breakdown of the projected impact.',
-          showChart: true,
-          timestamp: '10:42 AM'
-        },
-        {
-          id: 'msg-2',
-          sender: 'user',
-          text: 'What if I put down a larger down payment?',
-          timestamp: '10:43 AM'
-        }
-      ]
-    },
-    {
-      id: 'tax-saving',
-      title: 'Tax Saving Tips',
-      subtext: 'Consider Sec 80C & ELSS',
-      prompts: ['Best ELSS Funds', 'NPS Tax Benefit', 'How to save ₹46,800 tax?'],
-      messages: [
-        {
-          id: 'msg-tax-1',
-          sender: 'bot',
-          text: 'FinMate AI Tax Advisor: You still have ₹65,000 remaining in your Section 80C limit for this financial year. Investing in ELSS mutual funds can save you up to ₹20,280 in tax.',
-          timestamp: 'Yesterday'
-        }
-      ]
-    },
-    {
-      id: 'emergency-fund',
-      title: 'Emergency Fund Review',
-      subtext: 'You currently have 3 months',
-      prompts: ['Where to keep liquid cash?', 'Top Liquid Funds 2026', 'Auto-sweep savings accounts'],
-      messages: [
-        {
-          id: 'msg-em-1',
-          sender: 'bot',
-          text: 'FinMate AI Emergency Review: Your liquid balance of ₹2,25,000 covers 3 months of essential expenses. We recommend boosting this to 6 months (₹4,50,000).',
-          timestamp: '2 days ago'
-        }
-      ]
-    }
-  ];
+  topics: TopicThread[] = [];
 
   get currentTopic(): TopicThread {
     return this.topics.find(t => t.id === this.activeTopicId) || this.topics[0];
+  }
+
+  get hasActiveTopic(): boolean {
+    return !!this.topics.find(t => t.id === this.activeTopicId);
+  }
+
+  ngOnInit(): void {
+    this.startNewChat();
   }
 
   ngAfterViewChecked(): void {
@@ -107,7 +70,7 @@ export class AiAdvisorComponent implements AfterViewChecked {
     const newId = `chat-${Date.now()}`;
     const newTopic: TopicThread = {
       id: newId,
-      title: 'New Financial Consultation',
+      title: 'New Chat',
       subtext: 'Just started',
       prompts: ['Review my portfolio', 'How much can I invest monthly?', 'Retirement Planning'],
       messages: [
@@ -122,6 +85,7 @@ export class AiAdvisorComponent implements AfterViewChecked {
     this.topics.unshift(newTopic);
     this.activeTopicId = newId;
     this.shouldScrollToBottom = true;
+    this.cdr.detectChanges();
   }
 
   usePrompt(prompt: string): void {
@@ -131,11 +95,13 @@ export class AiAdvisorComponent implements AfterViewChecked {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
+      this.attachedFile = input.files[0];
       this.attachedFileName = input.files[0].name;
     }
   }
 
   removeAttachment(): void {
+    this.attachedFile = null;
     this.attachedFileName = null;
   }
 
@@ -147,10 +113,23 @@ export class AiAdvisorComponent implements AfterViewChecked {
   sendMessage(customText?: string): void {
     const text = customText || this.newMessage.trim();
     if (!text && !this.attachedFileName) return;
+    if (this.isLoading) return;
+
+    // If no active topic, create a new one first
+    if (!this.hasActiveTopic) {
+      this.startNewChat();
+    }
 
     const topic = this.currentTopic;
     const attachment = this.attachedFileName;
     this.attachedFileName = null;
+    this.attachedFile = null;
+
+    // Auto-title new chats from first user message
+    const isFirstUserMessage = !topic.messages.some(m => m.sender === 'user');
+    if (isFirstUserMessage && text) {
+      topic.title = text.length > 28 ? text.substring(0, 26) + '…' : text;
+    }
 
     // Add user message
     topic.messages.push({
@@ -165,6 +144,7 @@ export class AiAdvisorComponent implements AfterViewChecked {
       this.newMessage = '';
     }
 
+    this.isLoading = true;
     this.shouldScrollToBottom = true;
 
     // Add bot typing indicator
@@ -175,23 +155,74 @@ export class AiAdvisorComponent implements AfterViewChecked {
       isTyping: true
     });
 
-    // Generate intelligent AI response after delay
-    setTimeout(() => {
+    this.currentTypingMsgId = typingMsgId;
+
+    // Generate response with brief typing simulation
+    this.activeTimer = setTimeout(() => {
       // Remove typing indicator
       topic.messages = topic.messages.filter(m => m.id !== typingMsgId);
+      this.activeTimer = null;
+      this.currentTypingMsgId = null;
 
       const botReplyText = this.generateAiResponse(text, attachment);
-      topic.messages.push({
-        id: `bot-reply-${Date.now()}`,
-        sender: 'bot',
-        text: botReplyText,
-        timestamp: this.getFormattedTime()
-      });
+
+      topic.messages = [
+        ...topic.messages,
+        {
+          id: `bot-reply-${Date.now()}`,
+          sender: 'bot',
+          text: botReplyText,
+          timestamp: this.getFormattedTime()
+        }
+      ];
 
       // Update topic subtext with last query
       topic.subtext = text ? (text.length > 22 ? text.substring(0, 20) + '...' : text) : 'File uploaded';
+      this.isLoading = false;
       this.shouldScrollToBottom = true;
-    }, 1400);
+
+      // Force Angular Change Detection update
+      this.cdr.markForCheck();
+      this.cdr.detectChanges();
+    }, 700);
+  }
+
+  stopGeneration(): void {
+    if (this.activeTimer) {
+      clearTimeout(this.activeTimer);
+      this.activeTimer = null;
+    }
+
+    const topic = this.currentTopic;
+    if (topic && this.currentTypingMsgId) {
+      // Remove the typing indicator
+      topic.messages = topic.messages.filter(m => m.id !== this.currentTypingMsgId);
+      this.currentTypingMsgId = null;
+    }
+
+    if (topic) {
+      // Insert a stopped-response notice
+      topic.messages = [
+        ...topic.messages,
+        {
+          id: `stopped-${Date.now()}`,
+          sender: 'bot',
+          text: '⏹ You stopped the response.',
+          timestamp: this.getFormattedTime()
+        }
+      ];
+    }
+
+    this.isLoading = false;
+    this.shouldScrollToBottom = true;
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
+  }
+
+  ngOnDestroy(): void {
+    if (this.activeTimer) {
+      clearTimeout(this.activeTimer);
+    }
   }
 
   private generateAiResponse(query: string, attachmentName?: string | null): string {
