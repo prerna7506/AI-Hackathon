@@ -1,6 +1,7 @@
 import { Component, ElementRef, ViewChild, AfterViewChecked, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { WorkflowService } from '../../services/ai-advisor.service';
 
 interface ChatMessage {
   id: string;
@@ -30,6 +31,7 @@ interface TopicThread {
 export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild('chatViewport') private chatViewport!: ElementRef;
   private cdr = inject(ChangeDetectorRef);
+  private aiService = inject(WorkflowService);
 
   activeTopicId = '';
   attachedFileName: string | null = null;
@@ -157,15 +159,107 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     this.currentTypingMsgId = typingMsgId;
 
-    // Generate response with brief typing simulation
-    this.activeTimer = setTimeout(() => {
-      // Remove typing indicator
-      topic.messages = topic.messages.filter(m => m.id !== typingMsgId);
-      this.activeTimer = null;
-      this.currentTypingMsgId = null;
+    // Submit the job, then poll GET .../result until it's done, and show the final answer.
+    this.aiService.runWorkflowAndAwaitResult(text).subscribe({
+      next: (response) => {
+        const replyText = this.extractReplyText(response);
+        if (replyText) {
+          this.finishBotReply(topic, typingMsgId, replyText, text);
+        }
+      },
+      error: (err) => {
+        console.error('Workflow API call failed:', err);
+        this.finishBotReply(
+          topic,
+          typingMsgId,
+          `Sorry, I couldn't reach FinMate right now (${err.message || 'network error'}). Please try again.`,
+          text
+        );
+      }
+    });
+  }
 
-      const botReplyText = this.generateAiResponse(text, attachment);
+  /**
+   * Pull a human-readable reply out of the final result payload from Aava workflow.
+   */
+  private extractReplyText(response: any): string | null {
+    if (!response) return 'No response received from the workflow.';
+    if (typeof response === 'string') return response;
 
+    const data = response.data ?? response;
+
+    // Check data.result object first (final completed payload)
+    if (data.result) {
+      if (typeof data.result === 'string') return data.result;
+
+      // Check data.result.response string
+      if (typeof data.result.response === 'string') {
+        try {
+          const parsed = JSON.parse(data.result.response);
+          if (typeof parsed === 'string') return parsed;
+          if (parsed?.output && typeof parsed.output === 'string') return parsed.output;
+          if (parsed?.result && typeof parsed.result === 'string') return parsed.result;
+          if (parsed?.raw && typeof parsed.raw === 'string') return parsed.raw;
+
+          // Check tasksOutputs array
+          if (Array.isArray(parsed?.tasksOutputs) && parsed.tasksOutputs.length > 0) {
+            const lastTask = parsed.tasksOutputs[parsed.tasksOutputs.length - 1];
+            if (typeof lastTask?.raw === 'string') return lastTask.raw;
+            if (typeof lastTask?.output === 'string') return lastTask.output;
+            if (typeof lastTask?.description === 'string') return lastTask.description;
+          }
+
+          // Check pipeLineAgents array
+          if (Array.isArray(parsed?.pipeLineAgents)) {
+            for (const pa of parsed.pipeLineAgents) {
+              if (pa?.output && typeof pa.output === 'string') return pa.output;
+              if (pa?.result && typeof pa.result === 'string') return pa.result;
+            }
+          }
+        } catch {
+          return data.result.response;
+        }
+      }
+
+      // Check direct result fields
+      if (typeof data.result.output === 'string' && data.result.output) return data.result.output;
+      if (typeof data.result.result === 'string' && data.result.result) return data.result.result;
+      if (typeof data.result.raw === 'string' && data.result.raw) return data.result.raw;
+      if (typeof data.result.reply === 'string' && data.result.reply) return data.result.reply;
+      if (typeof data.result.message === 'string' && data.result.message) return data.result.message;
+      if (typeof data.result.answer === 'string' && data.result.answer) return data.result.answer;
+
+      // Check CrewAI tasks_output array
+      if (Array.isArray(data.result.tasks_output) && data.result.tasks_output.length > 0) {
+        const lastTask = data.result.tasks_output[data.result.tasks_output.length - 1];
+        if (typeof lastTask?.raw === 'string') return lastTask.raw;
+        if (typeof lastTask?.output === 'string') return lastTask.output;
+        if (typeof lastTask?.description === 'string') return lastTask.description;
+      }
+    }
+
+    // Direct string fields on data
+    if (typeof data.reply === 'string' && data.reply) return data.reply;
+    if (typeof data.output === 'string' && data.output) return data.output;
+    if (typeof data.message === 'string' && data.message) return data.message;
+    if (typeof data.answer === 'string' && data.answer) return data.answer;
+
+    // Block intermediate statuses
+    const innerStatus = (data?.status ?? response?.data?.status ?? '').toString().toUpperCase().trim();
+    if (['QUEUED', 'IN_PROGRESS', 'RUNNING', 'PENDING', 'STARTED', 'INITIALIZING', 'PROCESSING'].includes(innerStatus)) {
+      return null;
+    }
+
+    return typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+  }
+
+  private finishBotReply(topic: TopicThread, typingMsgId: string, botReplyText: string | null, originalQuery: string): void {
+    // Remove typing indicator
+    topic.messages = topic.messages.filter(m => m.id !== typingMsgId);
+    this.currentTypingMsgId = null;
+
+    // ✅ FIXED: Only add bot message if text is not null
+    if (botReplyText) {
       topic.messages = [
         ...topic.messages,
         {
@@ -175,16 +269,20 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
           timestamp: this.getFormattedTime()
         }
       ];
+    }
 
-      // Update topic subtext with last query
-      topic.subtext = text ? (text.length > 22 ? text.substring(0, 20) + '...' : text) : 'File uploaded';
-      this.isLoading = false;
-      this.shouldScrollToBottom = true;
+    // Update topic subtext with last query
+    topic.subtext = originalQuery
+      ? originalQuery.length > 22
+        ? originalQuery.substring(0, 20) + '...'
+        : originalQuery
+      : 'File uploaded';
 
-      // Force Angular Change Detection update
-      this.cdr.markForCheck();
-      this.cdr.detectChanges();
-    }, 700);
+    this.isLoading = false;
+    this.shouldScrollToBottom = true;
+
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
   }
 
   stopGeneration(): void {
@@ -222,30 +320,6 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
   ngOnDestroy(): void {
     if (this.activeTimer) {
       clearTimeout(this.activeTimer);
-    }
-  }
-
-  private generateAiResponse(query: string, attachmentName?: string | null): string {
-    const q = query.toLowerCase();
-
-    if (attachmentName) {
-      return `I've analyzed your uploaded document "${attachmentName}". Your recurring monthly subscriptions total ₹4,200 and your average net savings margin is 37.5%. Excellent stability!`;
-    }
-
-    if (q.includes('down payment') || q.includes('larger') || q.includes('increase') || q.includes('20%')) {
-      return 'Increasing your down payment to 20% (₹2,00,000) reduces your monthly EMI from ₹18,500 to ₹14,200. This frees up ₹4,300/month in your cash flow and saves ₹78,000 in total interest over a 5-year tenure!';
-    } else if (q.includes('afford') || q.includes('car') || q.includes('vehicle') || q.includes('buy')) {
-      return 'Based on your net monthly savings of ₹45,000, a car priced up to ₹10,00,000 is well within your safe threshold provided your monthly EMI does not exceed 15% of your gross income.';
-    } else if (q.includes('spend') || q.includes('analyze') || q.includes('expense') || q.includes('dining')) {
-      return 'FinMate AI Spending Breakdown: Your top expense category this month is Dining Out (₹18,500), which is 24% higher than your 6-month average. Reallocating ₹5,000 to your House Downpayment goal will accelerate your target by 4 months.';
-    } else if (q.includes('tax') || q.includes('elss') || q.includes('80c') || q.includes('nps')) {
-      return 'Tax Optimization Strategy: To maximize your tax savings under Sec 80C (₹1,50,000 limit), invest in high-performing ELSS funds. Additionally, an extra ₹50,000 in NPS under Sec 80CCD(1B) provides an extra ₹15,600 tax benefit!';
-    } else if (q.includes('emergency') || q.includes('liquid') || q.includes('fund') || q.includes('safety')) {
-      return 'Emergency Cushion Analysis: Your current liquid fund stands at ₹2,25,000 (3 months). We recommend setting up an automated sweep-in deposit of ₹15,000/mo to reach your target of ₹4,50,000 (6 months).';
-    } else if (q.includes('invest') || q.includes('sip') || q.includes('portfolio') || q.includes('equity')) {
-      return 'Investment Portfolio Insights: Your current asset allocation is 60% Equity, 30% Debt, and 10% Liquid. Increasing your equity SIP by ₹5,000/mo at a 12% CAGR will compound to ₹4.1 Lakhs extra in 5 years.';
-    } else {
-      return `FinMate AI Insights: I've processed your financial query about "${query}". Your current financial health score is 72/100 (Good Standing). You can also simulate this scenario directly in the What-If Simulator!`;
     }
   }
 

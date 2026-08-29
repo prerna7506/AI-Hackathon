@@ -203,7 +203,9 @@
 
       .bubble-text {
         font-weight: 500;
-        margin-bottom: 16px;
+        margin-bottom: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
       }
 
       .embedded-chart-card {
@@ -251,6 +253,11 @@
       color: #FFFFFF;
       border-top-right-radius: 4px;
       font-weight: 600;
+
+      .bubble-text {
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
 
       .attachment-badge {
         display: flex;

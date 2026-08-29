@@ -1,0 +1,8 @@
+{
+  "/workflows": {
+    "target": "https://int-ai.aava.ai",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}
