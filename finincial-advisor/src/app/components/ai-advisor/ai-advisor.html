@@ -1,5 +1,5 @@
 <div class="ai-advisor-wrapper">
-  <div class="ai-advisor-container" [class.blurred-content]="!authService.isLoggedIn()">
+  <div class="ai-advisor-container" [class.blurred-content]="!authService.isLoggedIn() && !authService.isAuthChecking()">
     <!-- Recent Topics Panel -->
     <aside class="recent-topics-panel">
       <div class="panel-header-row">
@@ -181,7 +181,7 @@
   </div>
 
   <!-- Sign In Blur Gate Overlay for Unauthenticated Users -->
-  @if (!authService.isLoggedIn()) {
+  @if (!authService.isLoggedIn() && !authService.isAuthChecking()) {
     <div class="auth-gate-overlay">
       <div class="auth-gate-card">
         <div class="gate-icon-box">

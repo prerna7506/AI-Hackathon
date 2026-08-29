@@ -39,19 +39,14 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthService {
-  private auth = auth;
-
-  isModalOpen = signal(false);
-  activeTab = signal<'profile' | 'auth'>('profile');
-  isLoggedIn = signal(false);
-  isAuthenticating = signal(false);
-  authError = signal<string | null>(null);
-
-  userProfile = signal<UserProfile>({
+function getInitialProfile(): UserProfile {
+  try {
+    const cached = localStorage.getItem('finmate_user_profile');
+    if (cached) {
+      return JSON.parse(cached);
+    }
+  } catch {}
+  return {
     name: 'Guest User',
     email: 'guest@finmate.ai',
     avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
@@ -78,14 +73,44 @@ export class AuthService {
         status: 'Active'
       }
     ]
-  });
+  };
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthService {
+  private auth = auth;
+
+  isModalOpen = signal(false);
+  activeTab = signal<'profile' | 'auth'>('profile');
+  isLoggedIn = signal(typeof window !== 'undefined' && localStorage.getItem('finmate_logged_in') === 'true');
+  isAuthChecking = signal(true);
+  isAuthenticating = signal(false);
+  authError = signal<string | null>(null);
+  currentUser = signal<User | null>(null);
+  currentUserId = signal<string | null>(typeof window !== 'undefined' ? localStorage.getItem('finmate_user_uid') : null);
+
+  userProfile = signal<UserProfile>(getInitialProfile());
 
   constructor() {
     onAuthStateChanged(this.auth, (user: User | null) => {
+      this.isAuthChecking.set(false);
+      this.currentUser.set(user);
+      this.currentUserId.set(user?.uid || null);
       if (user) {
+        try {
+          localStorage.setItem('finmate_logged_in', 'true');
+          localStorage.setItem('finmate_user_uid', user.uid);
+        } catch {}
         this.updateUserFromFirebase(user);
         this.isLoggedIn.set(true);
       } else {
+        try {
+          localStorage.removeItem('finmate_logged_in');
+          localStorage.removeItem('finmate_user_uid');
+          localStorage.removeItem('finmate_user_profile');
+        } catch {}
         this.isLoggedIn.set(false);
       }
     });
@@ -99,7 +124,7 @@ export class AuthService {
       memberSinceFormatted = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     }
 
-    this.userProfile.set({
+    const profile: UserProfile = {
       name: user.displayName || 'FinMate User',
       email: user.email || 'user@gmail.com',
       avatarUrl:
@@ -128,7 +153,13 @@ export class AuthService {
           status: 'Active'
         }
       ]
-    });
+    };
+
+    try {
+      localStorage.setItem('finmate_user_profile', JSON.stringify(profile));
+    } catch {}
+
+    this.userProfile.set(profile);
   }
 
   openModal(tab: 'profile' | 'auth' = 'profile'): void {
@@ -200,6 +231,11 @@ export class AuthService {
         ]
       });
       this.activeTab.set('auth');
+      try {
+        localStorage.removeItem('finmate_logged_in');
+        localStorage.removeItem('finmate_user_uid');
+        localStorage.removeItem('finmate_user_profile');
+      } catch {}
     } catch (error) {
       console.error('Sign-Out Error:', error);
     }

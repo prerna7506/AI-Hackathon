@@ -1,7 +1,19 @@
-import { Component, ElementRef, ViewChild, AfterViewChecked, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  ViewChild,
+  AfterViewChecked,
+  OnInit,
+  OnDestroy,
+  inject,
+  ChangeDetectorRef,
+  effect,
+  untracked
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { FirestoreService, TopicThreadData } from '../../services/firestore.service';
 import { WorkflowService } from '../../services/ai-advisor.service';
 import { MarkdownPipe } from '../../pipes/markdown.pipe';
 
@@ -35,9 +47,10 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild('messageTextarea') private messageTextarea?: ElementRef<HTMLTextAreaElement>;
   private cdr = inject(ChangeDetectorRef);
   private aiService = inject(WorkflowService);
+  private firestoreService = inject(FirestoreService);
   authService = inject(AuthService);
 
-  activeTopicId = '';
+  activeTopicId = 'chat-init';
   attachedFileName: string | null = null;
   attachedFile: File | null = null;
   newMessage = '';
@@ -46,36 +59,9 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
   private activeTimer: any = null;
   private currentTypingMsgId: string | null = null;
 
-  topics: TopicThread[] = [];
-
-  get currentTopic(): TopicThread {
-    return this.topics.find(t => t.id === this.activeTopicId) || this.topics[0];
-  }
-
-  get hasActiveTopic(): boolean {
-    return !!this.topics.find(t => t.id === this.activeTopicId);
-  }
-
-  ngOnInit(): void {
-    this.startNewChat();
-  }
-
-  ngAfterViewChecked(): void {
-    if (this.shouldScrollToBottom) {
-      this.scrollToBottom();
-      this.shouldScrollToBottom = false;
-    }
-  }
-
-  selectTopic(id: string): void {
-    this.activeTopicId = id;
-    this.shouldScrollToBottom = true;
-  }
-
-  startNewChat(): void {
-    const newId = `chat-${Date.now()}`;
-    const newTopic: TopicThread = {
-      id: newId,
+  topics: TopicThread[] = [
+    {
+      id: 'chat-init',
       title: 'New Chat',
       subtext: 'Just started',
       prompts: [
@@ -86,16 +72,115 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
       ],
       messages: [
         {
-          id: `bot-start-${Date.now()}`,
+          id: 'bot-start-init',
+          sender: 'bot',
+          text: 'Hello! I am your FinMate Financial Decision Advisor. Tell me about any purchase or financial decision you are planning, and I will help you answer: "Can I afford this?"',
+          timestamp: 'Just now'
+        }
+      ]
+    }
+  ];
+
+  get currentTopic(): TopicThread {
+    return this.topics.find(t => t.id === this.activeTopicId) || this.topics[0];
+  }
+
+  get hasActiveTopic(): boolean {
+    return this.topics.length > 0;
+  }
+
+  constructor() {
+    effect(() => {
+      const uid = this.authService.currentUserId();
+      const isLoggedIn = this.authService.isLoggedIn();
+      untracked(() => {
+        if (isLoggedIn && uid) {
+          this.loadChatsFromFirestore(uid);
+        } else if (!isLoggedIn && !this.authService.isAuthChecking()) {
+          this.topics = [this.createDefaultThread('chat-guest')];
+          this.activeTopicId = 'chat-guest';
+        }
+      });
+    });
+  }
+
+  ngOnInit(): void {
+    const uid = this.authService.currentUserId();
+    if (uid && this.authService.isLoggedIn()) {
+      this.loadChatsFromFirestore(uid);
+    }
+  }
+
+  ngAfterViewChecked(): void {
+    if (this.shouldScrollToBottom) {
+      this.scrollToBottom();
+      this.shouldScrollToBottom = false;
+    }
+  }
+
+  private createDefaultThread(id: string = `chat-${Date.now()}`): TopicThread {
+    return {
+      id: id,
+      title: 'New Chat',
+      subtext: 'Just started',
+      prompts: [
+        'Can I afford a car for ₹8 Lakh?',
+        'Can I buy an iPhone for ₹1.5 Lakh?',
+        'Can I afford a ₹50 Lakh home loan?',
+        'Can I afford a ₹2 Lakh vacation?'
+      ],
+      messages: [
+        {
+          id: `bot-start-${id}`,
           sender: 'bot',
           text: 'Hello! I am your FinMate Financial Decision Advisor. Tell me about any purchase or financial decision you are planning, and I will help you answer: "Can I afford this?"',
           timestamp: this.getFormattedTime()
         }
       ]
     };
-    this.topics.unshift(newTopic);
-    this.activeTopicId = newId;
+  }
+
+  async loadChatsFromFirestore(uid: string): Promise<void> {
+    try {
+      const userChats = await this.firestoreService.loadUserChats(uid);
+      if (userChats && userChats.length > 0) {
+        this.topics = userChats;
+        this.activeTopicId = this.topics[0].id;
+      } else {
+        const initial = this.createDefaultThread(`chat-${Date.now()}`);
+        this.topics = [initial];
+        this.activeTopicId = initial.id;
+        this.firestoreService.saveChatThread(uid, initial);
+      }
+      this.shouldScrollToBottom = true;
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.warn('Failed to load user chats from Firestore:', error);
+      if (this.topics.length === 0) {
+        const fallback = this.createDefaultThread('chat-fallback');
+        this.topics = [fallback];
+        this.activeTopicId = fallback.id;
+      }
+      this.cdr.detectChanges();
+    }
+  }
+
+  selectTopic(id: string): void {
+    this.activeTopicId = id;
     this.shouldScrollToBottom = true;
+  }
+
+  startNewChat(saveToFirestore: boolean = true): void {
+    const newTopic = this.createDefaultThread(`chat-${Date.now()}`);
+    this.topics.unshift(newTopic);
+    this.activeTopicId = newTopic.id;
+    this.shouldScrollToBottom = true;
+
+    const uid = this.authService.currentUserId();
+    if (saveToFirestore && uid) {
+      this.firestoreService.saveChatThread(uid, newTopic);
+    }
+
     this.cdr.detectChanges();
   }
 
@@ -181,6 +266,12 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
       this.resetTextareaHeight();
     }
 
+    // Persist user message to Firestore
+    const uid = this.authService.currentUserId();
+    if (uid) {
+      this.firestoreService.saveChatThread(uid, topic);
+    }
+
     this.isLoading = true;
     this.shouldScrollToBottom = true;
 
@@ -194,8 +285,11 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     this.currentTypingMsgId = typingMsgId;
 
-    // Submit the job, then poll GET .../result until it's done, and show the final answer.
-    this.aiService.runWorkflowAndAwaitResult(text).subscribe({
+    // Build conversational context so the AI remembers previous items (e.g. 'car' + '1.5L')
+    const contextualPrompt = this.buildFullConversationContext(topic, text);
+
+    // Submit the job with full conversational context, then poll GET .../result until it's done
+    this.aiService.runWorkflowAndAwaitResult(contextualPrompt).subscribe({
       next: (response) => {
         const replyText = this.extractReplyText(response);
         if (replyText) {
@@ -212,6 +306,36 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
         );
       }
     });
+  }
+
+  /**
+   * Builds the conversation history transcript so the stateless workflow agent
+   * remembers all parameters (item, cost, income, savings) across multiple turns.
+   */
+  private buildFullConversationContext(topic: TopicThread, latestText: string): string {
+    const validMessages = topic.messages
+      .filter(m => !m.isTyping && m.text && !m.id.startsWith('bot-start'));
+
+    if (validMessages.length <= 1) {
+      return latestText;
+    }
+
+    // Combine recent conversation turns
+    const history = validMessages.map(m => {
+      if (m.sender === 'user') {
+        return `User: ${m.text}`;
+      } else {
+        // Extract key questions or clean summary from the advisor
+        const lines = (m.text || '')
+          .split('\n')
+          .map(l => l.trim())
+          .filter(l => l.length > 0 && !l.startsWith('|') && !l.startsWith('━') && !l.startsWith('---'));
+        const lastQuestion = lines.filter(l => l.endsWith('?')).pop() || lines[lines.length - 1] || '';
+        return `Advisor: ${lastQuestion}`;
+      }
+    }).join('\n');
+
+    return history;
   }
 
   /**
@@ -248,35 +372,23 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
           if (Array.isArray(parsed?.pipeLineAgents)) {
             for (const pa of parsed.pipeLineAgents) {
               if (pa?.output && typeof pa.output === 'string') return pa.output;
-              if (pa?.result && typeof pa.result === 'string') return pa.result;
             }
           }
         } catch {
+          // If not JSON, use the raw string
           return data.result.response;
         }
       }
 
-      // Check direct result fields
-      if (typeof data.result.output === 'string' && data.result.output) return data.result.output;
-      if (typeof data.result.result === 'string' && data.result.result) return data.result.result;
-      if (typeof data.result.raw === 'string' && data.result.raw) return data.result.raw;
-      if (typeof data.result.reply === 'string' && data.result.reply) return data.result.reply;
-      if (typeof data.result.message === 'string' && data.result.message) return data.result.message;
-      if (typeof data.result.answer === 'string' && data.result.answer) return data.result.answer;
-
-      // Check CrewAI tasks_output array
-      if (Array.isArray(data.result.tasks_output) && data.result.tasks_output.length > 0) {
-        const lastTask = data.result.tasks_output[data.result.tasks_output.length - 1];
-        if (typeof lastTask?.raw === 'string') return lastTask.raw;
-        if (typeof lastTask?.output === 'string') return lastTask.output;
-        if (typeof lastTask?.description === 'string') return lastTask.description;
-      }
+      if (typeof data.result.text === 'string') return data.result.text;
+      if (typeof data.result.message === 'string') return data.result.message;
+      if (typeof data.result.content === 'string') return data.result.content;
     }
 
-    // Direct string fields on data
-    if (typeof data.reply === 'string' && data.reply) return data.reply;
-    if (typeof data.output === 'string' && data.output) return data.output;
-    if (typeof data.message === 'string' && data.message) return data.message;
+    // Check data.response / data.output directly
+    if (typeof data.response === 'string') return data.response;
+    if (typeof data.output === 'string') return data.output;
+    if (typeof data.message === 'string' && data.status === 'COMPLETED') return data.message;
     if (typeof data.answer === 'string' && data.answer) return data.answer;
 
     // Block intermediate statuses
@@ -293,7 +405,6 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
     topic.messages = topic.messages.filter(m => m.id !== typingMsgId);
     this.currentTypingMsgId = null;
 
-    // ✅ FIXED: Only add bot message if text is not null
     if (botReplyText) {
       topic.messages = [
         ...topic.messages,
@@ -311,10 +422,23 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
       ? originalQuery.length > 22
         ? originalQuery.substring(0, 20) + '...'
         : originalQuery
-      : 'File uploaded';
+      : 'Decision query';
 
     this.isLoading = false;
     this.shouldScrollToBottom = true;
+
+    // Persist bot reply and extracted financial decision to Firestore
+    const uid = this.authService.currentUserId();
+    if (uid) {
+      this.firestoreService.saveChatThread(uid, topic);
+
+      if (botReplyText) {
+        const decision = this.firestoreService.parseDecisionFromBotResponse(botReplyText, originalQuery);
+        if (decision) {
+          this.firestoreService.saveFinancialDecision(uid, decision);
+        }
+      }
+    }
 
     this.cdr.markForCheck();
     this.cdr.detectChanges();
@@ -328,13 +452,11 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     const topic = this.currentTopic;
     if (topic && this.currentTypingMsgId) {
-      // Remove the typing indicator
       topic.messages = topic.messages.filter(m => m.id !== this.currentTypingMsgId);
       this.currentTypingMsgId = null;
     }
 
     if (topic) {
-      // Insert a stopped-response notice
       topic.messages = [
         ...topic.messages,
         {
@@ -344,30 +466,36 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
           timestamp: this.getFormattedTime()
         }
       ];
+
+      const uid = this.authService.currentUserId();
+      if (uid) {
+        this.firestoreService.saveChatThread(uid, topic);
+      }
     }
 
     this.isLoading = false;
     this.shouldScrollToBottom = true;
-    this.cdr.markForCheck();
     this.cdr.detectChanges();
+  }
+
+  private scrollToBottom(): void {
+    try {
+      if (this.chatViewport?.nativeElement) {
+        this.chatViewport.nativeElement.scrollTop = this.chatViewport.nativeElement.scrollHeight;
+      }
+    } catch (err) {
+      console.warn('Scroll error:', err);
+    }
+  }
+
+  private getFormattedTime(): string {
+    const now = new Date();
+    return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   }
 
   ngOnDestroy(): void {
     if (this.activeTimer) {
       clearTimeout(this.activeTimer);
     }
-  }
-
-  private scrollToBottom(): void {
-    try {
-      if (this.chatViewport) {
-        this.chatViewport.nativeElement.scrollTop = this.chatViewport.nativeElement.scrollHeight;
-      }
-    } catch (err) {}
-  }
-
-  private getFormattedTime(): string {
-    const now = new Date();
-    return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 }
