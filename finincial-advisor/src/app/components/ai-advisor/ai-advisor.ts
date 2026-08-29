@@ -1,6 +1,7 @@
 import { Component, ElementRef, ViewChild, AfterViewChecked, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../services/auth.service';
 import { WorkflowService } from '../../services/ai-advisor.service';
 import { MarkdownPipe } from '../../pipes/markdown.pipe';
 
@@ -34,6 +35,7 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild('messageTextarea') private messageTextarea?: ElementRef<HTMLTextAreaElement>;
   private cdr = inject(ChangeDetectorRef);
   private aiService = inject(WorkflowService);
+  authService = inject(AuthService);
 
   activeTopicId = '';
   attachedFileName: string | null = null;
@@ -112,6 +114,10 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
   removeAttachment(): void {
     this.attachedFile = null;
     this.attachedFileName = null;
+  }
+
+  openSignInModal(): void {
+    this.authService.openModal('auth');
   }
 
   triggerFileInput(): void {

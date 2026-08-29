@@ -14,6 +14,12 @@ export class AuthModalComponent {
   authService = inject(AuthService);
 
   switchTab(tab: 'profile' | 'auth'): void {
+    if (tab === 'auth' && this.authService.isLoggedIn()) {
+      return; // Locked while logged in
+    }
+    if (tab === 'profile' && !this.authService.isLoggedIn()) {
+      return; // Locked while not logged in
+    }
     this.authService.activeTab.set(tab);
   }
 

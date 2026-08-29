@@ -29,10 +29,18 @@ export class SidebarComponent {
   ];
 
   openProfile(): void {
-    this.authService.openModal('profile');
+    if (this.authService.isLoggedIn()) {
+      this.authService.openModal('profile');
+    } else {
+      this.authService.openModal('auth');
+    }
   }
 
   openAuth(): void {
-    this.authService.openModal('auth');
+    if (this.authService.isLoggedIn()) {
+      this.authService.logout();
+    } else {
+      this.authService.openModal('auth');
+    }
   }
 }
