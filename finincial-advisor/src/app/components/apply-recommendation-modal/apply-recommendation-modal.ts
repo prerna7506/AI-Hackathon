@@ -79,19 +79,20 @@ export class ApplyRecommendationModalComponent {
     this.goalsService.closeRecommendationModal();
   }
 
-  onApply(): void {
+  async onApply(): Promise<void> {
     const goal = this.activeGoal();
     if (!goal) return;
 
     this.isApplying.set(true);
 
-    setTimeout(() => {
-      this.goalsService.applyRecommendation(
+    try {
+      await this.goalsService.applyRecommendation(
         goal.id,
         this.boostAmount,
         this.selectedStrategy
       );
+    } finally {
       this.isApplying.set(false);
-    }, 600);
+    }
   }
 }

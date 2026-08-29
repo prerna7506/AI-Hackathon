@@ -5,6 +5,7 @@ import { AllocationStrategyComponent } from '../allocation-strategy/allocation-s
 import { NextStepComponent } from '../next-step/next-step';
 import { PortfolioComponent } from '../portfolio/portfolio';
 import { GoalsService } from '../../services/goals.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-financial-goals',
@@ -21,4 +22,9 @@ import { GoalsService } from '../../services/goals.service';
 })
 export class FinancialGoalsComponent {
   goalsService = inject(GoalsService);
+  authService = inject(AuthService);
+
+  openAuthModal(): void {
+    this.authService.openModal('auth');
+  }
 }

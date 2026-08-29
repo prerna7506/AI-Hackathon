@@ -59,4 +59,13 @@
     </div>
   </div>
 </div>
+} @else {
+  <div class="primary-goal-empty-card">
+    <div class="empty-icon">🎯</div>
+    <h3>No Active Goals Found</h3>
+    <p>Create a new financial goal to track your wealth progress and receive AI recommendations.</p>
+    <button class="btn-create-first" (click)="goalsService.openModal()">
+      <span>+ Create New Goal</span>
+    </button>
+  </div>
 }

@@ -42,6 +42,22 @@ export interface FinancialDecisionRecord {
   createdAt?: any;
 }
 
+export interface GoalItem {
+  id: string;
+  title: string;
+  targetAmount: number;
+  currentAmount: number;
+  timelineYears: number;
+  targetYear: number;
+  icon: 'house' | 'car' | 'flight' | 'graduation' | 'retirement' | 'shield';
+  status: string;
+  isPrimary?: boolean;
+  color?: string;
+  monthlyBoost?: number;
+  strategy?: string;
+  updatedAt?: any;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -226,4 +242,122 @@ export class FirestoreService {
       })
     };
   }
+
+  /**
+   * Save or update a financial goal in Firestore under users/{userId}/goals/{goalId}
+   */
+  async saveGoal(userId: string, goal: GoalItem): Promise<void> {
+    if (!userId || !goal?.id) return;
+    try {
+      const goalDocRef = doc(this.db, 'users', userId, 'goals', goal.id);
+      await setDoc(
+        goalDocRef,
+        {
+          id: goal.id,
+          title: goal.title,
+          targetAmount: Number(goal.targetAmount) || 0,
+          currentAmount: Number(goal.currentAmount) || 0,
+          timelineYears: Number(goal.timelineYears) || 1,
+          targetYear: Number(goal.targetYear) || (new Date().getFullYear() + 3),
+          icon: goal.icon || 'house',
+          status: goal.status || 'On Track',
+          isPrimary: Boolean(goal.isPrimary),
+          color: goal.color || 'var(--color-primary)',
+          monthlyBoost: goal.monthlyBoost ? Number(goal.monthlyBoost) : null,
+          strategy: goal.strategy || null,
+          updatedAt: serverTimestamp()
+        },
+        { merge: true }
+      );
+      console.log(`✅ Goal ${goal.id} saved to Firestore for user ${userId}`);
+    } catch (error) {
+      console.error('Error saving goal to Firestore:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Save / seed all goals to Firestore in batch
+   */
+  async saveAllGoals(userId: string, goals: GoalItem[]): Promise<void> {
+    if (!userId || !Array.isArray(goals)) return;
+    try {
+      for (const goal of goals) {
+        await this.saveGoal(userId, goal);
+      }
+      console.log(`✅ ${goals.length} goals saved to Firestore for user ${userId}`);
+    } catch (error) {
+      console.error('Error saving all goals to Firestore:', error);
+    }
+  }
+
+  /**
+   * Load all goals for a user from Firestore under users/{userId}/goals
+   */
+  async loadUserGoals(userId: string): Promise<GoalItem[]> {
+    if (!userId) return [];
+    try {
+      const goalsColRef = collection(this.db, 'users', userId, 'goals');
+      const querySnapshot = await getDocs(goalsColRef);
+
+      const goals: GoalItem[] = [];
+      querySnapshot.forEach(docSnap => {
+        const data = docSnap.data() as any;
+        goals.push({
+          id: data.id || docSnap.id,
+          title: data.title || 'Untitled Goal',
+          targetAmount: Number(data.targetAmount) || 0,
+          currentAmount: Number(data.currentAmount) || 0,
+          timelineYears: Number(data.timelineYears) || 1,
+          targetYear: Number(data.targetYear) || (new Date().getFullYear() + 3),
+          icon: data.icon || 'house',
+          status: data.status || 'On Track',
+          isPrimary: Boolean(data.isPrimary),
+          color: data.color || 'var(--color-primary)',
+          monthlyBoost: data.monthlyBoost ? Number(data.monthlyBoost) : undefined,
+          strategy: data.strategy || undefined,
+          updatedAt: data.updatedAt
+        });
+      });
+
+      console.log(`✅ Loaded ${goals.length} goals from Firestore for user ${userId}`);
+      return goals;
+    } catch (error) {
+      console.warn('Could not load goals from Firestore (using fallback):', error);
+      return [];
+    }
+  }
+
+  /**
+   * Delete a financial goal from Firestore
+   */
+  async deleteGoal(userId: string, goalId: string): Promise<void> {
+    if (!userId || !goalId) return;
+    try {
+      const goalDocRef = doc(this.db, 'users', userId, 'goals', goalId);
+      await deleteDoc(goalDocRef);
+      console.log(`✅ Goal ${goalId} deleted from Firestore for user ${userId}`);
+    } catch (error) {
+      console.error('Error deleting goal from Firestore:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update primary goal status across all goals for a user in Firestore
+   */
+  async setPrimaryGoal(userId: string, primaryGoalId: string, currentGoals: GoalItem[]): Promise<void> {
+    if (!userId || !primaryGoalId) return;
+    try {
+      for (const g of currentGoals) {
+        const isPrimary = g.id === primaryGoalId;
+        const goalDocRef = doc(this.db, 'users', userId, 'goals', g.id);
+        await setDoc(goalDocRef, { isPrimary: isPrimary, updatedAt: serverTimestamp() }, { merge: true });
+      }
+      console.log(`✅ Set primary goal to ${primaryGoalId} in Firestore for user ${userId}`);
+    } catch (error) {
+      console.error('Error updating primary goal in Firestore:', error);
+    }
+  }
 }
+
