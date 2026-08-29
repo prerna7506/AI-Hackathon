@@ -170,6 +170,60 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.shouldScrollToBottom = true;
   }
 
+  editingTopicId: string | null = null;
+  editingTitle: string = '';
+
+  startRenaming(topic: TopicThread, event: MouseEvent): void {
+    event.stopPropagation();
+    this.editingTopicId = topic.id;
+    this.editingTitle = topic.title;
+  }
+
+  saveRename(topic: TopicThread): void {
+    const trimmed = this.editingTitle.trim();
+    if (trimmed && trimmed !== topic.title) {
+      topic.title = trimmed;
+      const uid = this.authService.currentUserId();
+      if (uid) {
+        this.firestoreService.saveChatThread(uid, topic);
+      }
+    }
+    this.editingTopicId = null;
+    this.editingTitle = '';
+    this.cdr.detectChanges();
+  }
+
+  cancelRename(): void {
+    this.editingTopicId = null;
+    this.editingTitle = '';
+    this.cdr.detectChanges();
+  }
+
+  deleteTopic(topicId: string, event: MouseEvent): void {
+    event.stopPropagation();
+
+    const index = this.topics.findIndex(t => t.id === topicId);
+    if (index === -1) return;
+
+    this.topics = this.topics.filter(t => t.id !== topicId);
+
+    // If deleted the active topic, switch to another or create a new one
+    if (this.activeTopicId === topicId) {
+      if (this.topics.length > 0) {
+        this.activeTopicId = this.topics[0].id;
+      } else {
+        this.startNewChat(true);
+      }
+    }
+
+    const uid = this.authService.currentUserId();
+    if (uid) {
+      this.firestoreService.deleteChatThread(uid, topicId);
+    }
+
+    this.cdr.detectChanges();
+  }
+
   startNewChat(saveToFirestore: boolean = true): void {
     const newTopic = this.createDefaultThread(`chat-${Date.now()}`);
     this.topics.unshift(newTopic);

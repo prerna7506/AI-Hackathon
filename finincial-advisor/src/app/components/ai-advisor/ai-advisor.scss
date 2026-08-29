@@ -155,21 +155,37 @@
     gap: 12px;
 
     .topic-card {
-      padding: 14px 16px;
+      padding: 10px 14px;
       border-radius: 10px;
       cursor: pointer;
       background: transparent;
       transition: all 0.2s ease;
+      position: relative;
+
+      .topic-content-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .topic-text-col {
+        flex: 1;
+        min-width: 0;
+      }
 
       .topic-title {
         font-size: 0.88rem;
         font-weight: 700;
         color: var(--text-main);
-        margin-bottom: 4px;
+        margin-bottom: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .topic-subtext {
-        font-size: 0.76rem;
+        font-size: 0.74rem;
         color: var(--text-muted);
         white-space: nowrap;
         overflow: hidden;
@@ -177,8 +193,45 @@
         display: block;
       }
 
+      .topic-hover-actions {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        flex-shrink: 0;
+
+        .btn-topic-action {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          border-radius: 6px;
+          border: none;
+          background: transparent;
+          color: var(--text-muted);
+          cursor: pointer;
+          transition: all 0.15s ease;
+
+          &:hover {
+            background: rgba(0, 0, 0, 0.08);
+            color: var(--text-main);
+          }
+
+          &.delete-action:hover {
+            background: #FEE2E2;
+            color: #EF4444;
+          }
+        }
+      }
+
       &:hover {
         background: var(--bg-subtle);
+
+        .topic-hover-actions {
+          opacity: 1;
+        }
       }
 
       &.active {
@@ -186,6 +239,66 @@
 
         .topic-title {
           color: var(--color-primary);
+        }
+
+        .topic-hover-actions {
+          opacity: 1;
+        }
+      }
+
+      .rename-box {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        width: 100%;
+
+        .rename-input {
+          flex: 1;
+          min-width: 0;
+          font-size: 0.84rem;
+          font-weight: 700;
+          padding: 4px 8px;
+          border: 1.5px solid var(--color-primary);
+          border-radius: 6px;
+          background: #FFFFFF;
+          color: var(--text-main);
+          outline: none;
+        }
+
+        .rename-actions {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+
+          .btn-action-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+
+            &.check-btn {
+              background: #DCFCE7;
+              color: #16A34A;
+              &:hover {
+                background: #16A34A;
+                color: #FFFFFF;
+              }
+            }
+
+            &.cancel-btn {
+              background: #F3F4F6;
+              color: #6B7280;
+              &:hover {
+                background: #EF4444;
+                color: #FFFFFF;
+              }
+            }
+          }
         }
       }
     }
