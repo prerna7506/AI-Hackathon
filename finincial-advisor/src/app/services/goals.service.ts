@@ -113,7 +113,7 @@ export class GoalsService {
         this.saveToLocalCache(userGoals);
       } else {
         // First-time user: seed default starter goals into Firestore
-        console.log('🌱 Seeding initial starter goals for new user into Firestore...');
+        console.log('Seeding initial starter goals for new user into Firestore...');
         await this.firestoreService.saveAllGoals(uid, DEFAULT_GOALS);
         this.goals.set(DEFAULT_GOALS);
         this.saveToLocalCache(DEFAULT_GOALS);
@@ -170,16 +170,16 @@ export class GoalsService {
     if (uid && this.authService.isLoggedIn()) {
       try {
         await this.firestoreService.saveGoal(uid, createdGoal);
-        this.showToast(`🎯 Goal "${createdGoal.title}" saved to Firebase Cloud!`);
+        this.showToast(`Goal "${createdGoal.title}" saved to Firebase Cloud!`);
       } catch (error) {
         console.error('Error saving goal to Firestore:', error);
-        this.showToast(`⚠️ Goal saved locally. Sync failed: ${(error as any)?.message || 'Cloud error'}`);
+        this.showToast(`Goal saved locally. Sync failed: ${(error as any)?.message || 'Cloud error'}`);
       } finally {
         this.isSyncing.set(false);
       }
     } else {
       this.isSyncing.set(false);
-      this.showToast(`🎯 Goal "${createdGoal.title}" created successfully!`);
+      this.showToast(`Goal "${createdGoal.title}" created successfully!`);
     }
   }
 
@@ -231,15 +231,15 @@ export class GoalsService {
         if (newPrimaryId) {
           await this.firestoreService.setPrimaryGoal(uid, newPrimaryId, filtered);
         }
-        this.showToast('🗑️ Goal removed from Firebase Cloud.');
+        this.showToast('Goal removed from Firebase Cloud.');
       } catch (error) {
         console.error('Error deleting goal from Firestore:', error);
-        this.showToast('🗑️ Goal removed locally.');
+        this.showToast('Goal removed locally.');
       } finally {
         this.isSyncing.set(false);
       }
     } else {
-      this.showToast('🗑️ Goal removed.');
+      this.showToast('Goal removed.');
     }
   }
 
@@ -274,15 +274,15 @@ export class GoalsService {
       this.isSyncing.set(true);
       try {
         await this.firestoreService.saveGoal(uid, targetGoal);
-        this.showToast(`✨ Recommendation applied & saved to Firebase! (+₹${boostAmount.toLocaleString('en-IN')}/mo)`);
+        this.showToast(`Recommendation applied & saved to Firebase! (+₹${boostAmount.toLocaleString('en-IN')}/mo)`);
       } catch (error) {
         console.error('Error updating recommendation in Firestore:', error);
-        this.showToast(`✨ Recommendation applied! Added ₹${boostAmount.toLocaleString('en-IN')}/mo optimization.`);
+        this.showToast(`Recommendation applied! Added ₹${boostAmount.toLocaleString('en-IN')}/mo optimization.`);
       } finally {
         this.isSyncing.set(false);
       }
     } else {
-      this.showToast(`✨ Recommendation applied! Added ₹${boostAmount.toLocaleString('en-IN')}/mo optimization to your plan.`);
+      this.showToast(`Recommendation applied! Added ₹${boostAmount.toLocaleString('en-IN')}/mo optimization to your plan.`);
     }
   }
 }

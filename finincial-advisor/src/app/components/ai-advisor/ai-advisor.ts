@@ -516,7 +516,7 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
         {
           id: `stopped-${Date.now()}`,
           sender: 'bot',
-          text: '⏹ You stopped the response.',
+          text: 'You stopped the response.',
           timestamp: this.getFormattedTime()
         }
       ];

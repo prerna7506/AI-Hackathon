@@ -151,7 +151,10 @@
   gap: 12px;
 
   .empty-icon {
-    font-size: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
     margin-bottom: 4px;
   }
 

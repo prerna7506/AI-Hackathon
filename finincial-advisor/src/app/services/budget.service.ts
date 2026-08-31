@@ -115,11 +115,11 @@ export class BudgetService {
         return c;
       })
     );
-    this.goalsService.showToast('✨ AI Smart Rebalance applied! Freed ₹6,000 to boost your savings goals.');
+    this.goalsService.showToast('AI Smart Rebalance applied! Freed ₹6,000 to boost your savings goals.');
   }
 
   saveBudget(): void {
     this.closeModal();
-    this.goalsService.showToast('✅ Monthly budget allocations updated successfully!');
+    this.goalsService.showToast('Monthly budget allocations updated successfully!');
   }
 }

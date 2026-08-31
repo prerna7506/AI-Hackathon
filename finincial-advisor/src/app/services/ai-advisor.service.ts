@@ -87,7 +87,7 @@ export class WorkflowService {
       .post<WorkflowSubmitResponse>(this.baseUrl, formData, { headers })
       .pipe(
         switchMap(response => {
-          console.log('✅ Workflow submitted:', response.data.workflowExecutionId);
+          console.log('[Workflow] Workflow submitted:', response.data.workflowExecutionId);
           return of(response);
         })
       );
@@ -96,16 +96,16 @@ export class WorkflowService {
   /**
    * Step 2: Poll GET until workflow status reaches COMPLETED
    * 
-   * ✅ CRITICAL: This method ONLY emits when status is COMPLETED/SUCCESS/FINISHED/DONE
+   * CRITICAL: This method ONLY emits when status is COMPLETED/SUCCESS/FINISHED/DONE
    * All other statuses (QUEUED, RUNNING, etc) silently keep polling
    * 
    * Sequence:
    * GET → {"status": "QUEUED"} → Keep polling (NO subscriber.next() called)
    * GET → {"status": "RUNNING"} → Keep polling (NO subscriber.next() called)
-   * GET → {"status": "COMPLETED", "data": {...}} → subscriber.next(response) + complete ✅
+   * GET → {"status": "COMPLETED", "data": {...}} → subscriber.next(response) + complete
    */
   pollForResult(executionId: string): Observable<WorkflowResultResponse> {
-    console.log(`⏳ Starting to poll for execution: ${executionId}`);
+    console.log(`Starting to poll for execution: ${executionId}`);
 
     return new Observable<WorkflowResultResponse>((subscriber) => {
       let pollAttempts = 0;
@@ -116,13 +116,13 @@ export class WorkflowService {
         if (isCancelled) return;
 
         pollAttempts++;
-        console.log(`📡 [Poll #${pollAttempts}/${this.maxPollAttempts}] Fetching result for ${executionId}...`);
+        console.log(`[Poll #${pollAttempts}/${this.maxPollAttempts}] Fetching result for ${executionId}...`);
 
         this.getWorkflowResult(executionId).subscribe({
           next: (response) => {
             if (isCancelled) return;
 
-            // ✅ CRITICAL: The execution status is inside response.data.status!
+            // CRITICAL: The execution status is inside response.data.status!
             // response.status is just the HTTP envelope ("SUCCESS").
             const innerStatus = (
               response?.data?.status ??
@@ -131,7 +131,7 @@ export class WorkflowService {
               ''
             ).toString().toUpperCase().trim();
 
-            console.log(`📊 [Poll #${pollAttempts}] data.status: "${innerStatus}", wrapper: "${response?.status}"`);
+            console.log(`[Poll #${pollAttempts}] data.status: "${innerStatus}", wrapper: "${response?.status}"`);
 
             const isIntermediate = [
               'QUEUED',
@@ -147,14 +147,14 @@ export class WorkflowService {
 
             // 1. If still in progress and no final result -> keep polling silently (no UI emission)
             if (isIntermediate && !hasResult) {
-              console.log(`⏳ [SILENT POLL] Status is "${innerStatus}" - continuing to poll...`);
+              console.log(`[SILENT POLL] Status is "${innerStatus}" - continuing to poll...`);
               timeoutId = setTimeout(poll, this.pollIntervalMs);
               return;
             }
 
             // 2. Success completion -> emit to UI and complete
             if (['SUCCESS', 'COMPLETED', 'FINISHED', 'DONE'].includes(innerStatus) || hasResult) {
-              console.log('✅✅✅ [EMIT] Workflow COMPLETED! Emitting result to UI:', response);
+              console.log('[EMIT] Workflow COMPLETED! Emitting result to UI:', response);
               subscriber.next(response);
               subscriber.complete();
               return;
@@ -163,28 +163,28 @@ export class WorkflowService {
             // 3. Failure terminal state -> error out
             if (['FAILED', 'ERROR', 'CANCELLED'].includes(innerStatus)) {
               const errMsg = response.error || response.data?.['message'] || `Workflow failed with status: ${innerStatus}`;
-              console.error('❌ Workflow failed:', errMsg);
+              console.error('[Workflow] Workflow failed:', errMsg);
               subscriber.error(new Error(errMsg));
               return;
             }
 
             // 4. Timeout reached
             if (pollAttempts >= this.maxPollAttempts) {
-              console.error('❌ Max poll attempts reached without completion.');
+              console.error('Max poll attempts reached without completion.');
               subscriber.error(new Error('Timed out waiting for workflow result.'));
               return;
             }
 
             // 5. Default: keep polling
-            console.log(`⏳ Unknown status "${innerStatus}" - treating as in-progress...`);
+            console.log(`Unknown status "${innerStatus}" - treating as in-progress...`);
             timeoutId = setTimeout(poll, this.pollIntervalMs);
           },
           error: (err) => {
             if (isCancelled) return;
-            console.warn(`⚠️ [Poll #${pollAttempts}] Request error:`, err);
+            console.warn(`[Poll #${pollAttempts}] Request error:`, err);
 
             if (pollAttempts < this.maxPollAttempts) {
-              console.log(`🔄 Retrying poll in ${this.pollIntervalMs}ms...`);
+              console.log(`Retrying poll in ${this.pollIntervalMs}ms...`);
               timeoutId = setTimeout(poll, this.pollIntervalMs);
             } else {
               subscriber.error(err);
@@ -270,7 +270,7 @@ export class WorkflowService {
     inputKey: string = '{{input_string_true}}',
     options?: { pipelineId?: string; user?: string; priority?: string }
   ): Observable<WorkflowResultResponse> {
-    console.log('🚀 Starting workflow for:', userInputText);
+    console.log('Starting workflow for:', userInputText);
 
     return this.submitWorkflow(userInputText, inputKey, options).pipe(
       // After submit, get the executionId and start polling
@@ -288,7 +288,7 @@ export class WorkflowService {
   }
 
   private handleError(error: HttpErrorResponse) {
-    console.error('🔴 Service error:', error);
+    console.error('Service error:', error);
     const message = error.error?.message || error.message || 'Workflow API error';
     return throwError(() => new Error(message));
   }

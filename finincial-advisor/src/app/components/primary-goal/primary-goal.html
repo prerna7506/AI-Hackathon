@@ -61,7 +61,13 @@
 </div>
 } @else {
   <div class="primary-goal-empty-card">
-    <div class="empty-icon">🎯</div>
+    <div class="empty-icon">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <circle cx="12" cy="12" r="6"/>
+        <circle cx="12" cy="12" r="2"/>
+      </svg>
+    </div>
     <h3>No Active Goals Found</h3>
     <p>Create a new financial goal to track your wealth progress and receive AI recommendations.</p>
     <button class="btn-create-first" (click)="goalsService.openModal()">

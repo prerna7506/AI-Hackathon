@@ -56,19 +56,19 @@ function getInitialProfile(): UserProfile {
       {
         name: 'AI Financial Decision Helper',
         desc: 'Instant purchase affordability scores and advisor verdicts',
-        icon: '🛡️',
+        icon: 'shield',
         status: 'Active'
       },
       {
         name: 'Smart Expense & EMI Modeling',
         desc: 'Real-time post-purchase budget and liquidity impact calculations',
-        icon: '📊',
+        icon: 'chart',
         status: 'Active'
       },
       {
         name: 'Unlimited Advisor Consultations',
         desc: 'Multi-scenario interactive conversations & financial health checks',
-        icon: '💬',
+        icon: 'chat',
         status: 'Active'
       }
     ]
@@ -135,19 +135,19 @@ export class AuthService {
         {
           name: 'AI Financial Decision Helper',
           desc: 'Instant purchase affordability scores and advisor verdicts',
-          icon: '🛡️',
+          icon: 'shield',
           status: 'Active'
         },
         {
           name: 'Smart Expense & EMI Modeling',
           desc: 'Real-time post-purchase budget and liquidity impact calculations',
-          icon: '📊',
+          icon: 'chart',
           status: 'Active'
         },
         {
           name: 'Unlimited Advisor Consultations',
           desc: 'Multi-scenario interactive conversations & financial health checks',
-          icon: '💬',
+          icon: 'chat',
           status: 'Active'
         }
       ]
@@ -210,19 +210,19 @@ export class AuthService {
           {
             name: 'AI Financial Decision Helper',
             desc: 'Instant purchase affordability scores and advisor verdicts',
-            icon: '🛡️',
+            icon: 'shield',
             status: 'Active'
           },
           {
             name: 'Smart Expense & EMI Modeling',
             desc: 'Real-time post-purchase budget and liquidity impact calculations',
-            icon: '📊',
+            icon: 'chart',
             status: 'Active'
           },
           {
             name: 'Unlimited Advisor Consultations',
             desc: 'Multi-scenario interactive conversations & financial health checks',
-            icon: '💬',
+            icon: 'chat',
             status: 'Active'
           }
         ]

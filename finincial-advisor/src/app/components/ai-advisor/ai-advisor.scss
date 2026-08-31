@@ -520,6 +520,10 @@
 
             .meta-icon {
               font-size: 0.9rem;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              color: var(--color-primary);
             }
 
             .meta-label {
