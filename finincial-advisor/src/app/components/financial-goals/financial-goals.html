@@ -5,22 +5,22 @@
       <div class="title-with-badge">
         <h1 class="page-title">Financial Goals</h1>
         @if (authService.isLoggedIn()) {
-          <div class="cloud-badge logged-in" title="Your goals are securely stored in Firebase Cloud Firestore">
+          <div class="cloud-badge logged-in" title="Your goals are securely synchronized with live cloud backup">
             <span class="pulse-dot"></span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
-            <span>Firebase Synced</span>
+            <span>Live Cloud Sync</span>
             @if (goalsService.isSyncing()) {
               <span class="sync-state">• Saving...</span>
             }
           </div>
         } @else {
-          <button class="cloud-badge guest" (click)="openAuthModal()" title="Click to log in and sync your goals to Firebase Cloud across all devices">
+          <button class="cloud-badge guest" (click)="openAuthModal()" title="Click to log in and sync your goals across all devices">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
-            <span>Local Mode • Click to Sync to Firebase</span>
+            <span>Local Mode • Click to Sync to Cloud</span>
           </button>
         }
       </div>
-      <p class="page-subtitle">Track, customize, and manage your wealth accumulation milestones in real-time with AI & Firebase Cloud.</p>
+      <p class="page-subtitle">Track, customize, and manage your wealth accumulation milestones in real-time with AI & Cloud Sync.</p>
     </div>
 
     <div class="header-actions">
@@ -35,7 +35,7 @@
   @if (goalsService.isLoading()) {
     <div class="loading-state">
       <div class="spinner"></div>
-      <p>Syncing goals from Firebase Firestore...</p>
+      <p>Syncing goals from cloud storage...</p>
     </div>
   } @else {
     <!-- Dashboard Main Grid -->
