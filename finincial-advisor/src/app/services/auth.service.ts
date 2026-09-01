@@ -39,17 +39,25 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 
+export const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80';
+
 function getInitialProfile(): UserProfile {
   try {
     const cached = localStorage.getItem('finmate_user_profile');
     if (cached) {
-      return JSON.parse(cached);
+      const parsed = JSON.parse(cached);
+      // Automatically migrate from old avatar if previously cached
+      if (parsed.avatarUrl?.includes('photo-1534528741775-53994a69daeb')) {
+        parsed.avatarUrl = DEFAULT_AVATAR;
+        localStorage.setItem('finmate_user_profile', JSON.stringify(parsed));
+      }
+      return parsed;
     }
   } catch {}
   return {
     name: 'Guest User',
     email: 'guest@finmate.ai',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+    avatarUrl: DEFAULT_AVATAR,
     memberSince: 'August 2026',
     membershipStatus: 'Active Pro Access',
     activeFeatures: [
@@ -126,9 +134,7 @@ export class AuthService {
     const profile: UserProfile = {
       name: user.displayName || 'FinMate User',
       email: user.email || 'user@gmail.com',
-      avatarUrl:
-        user.photoURL ||
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+      avatarUrl: user.photoURL || DEFAULT_AVATAR,
       memberSince: memberSinceFormatted,
       membershipStatus: 'Active Pro Access',
       activeFeatures: [
@@ -203,7 +209,7 @@ export class AuthService {
       this.userProfile.set({
         name: 'Guest User',
         email: 'guest@finmate.ai',
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+        avatarUrl: DEFAULT_AVATAR,
         memberSince: 'August 2026',
         membershipStatus: 'Active Pro Access',
         activeFeatures: [
