@@ -42,6 +42,21 @@ export interface FinancialDecisionRecord {
   createdAt?: any;
 }
 
+export interface SimulatorHistoryRecord {
+  id: string;
+  scenarioId: string;
+  scenarioTitle: string;
+  score: number;
+  status: string;
+  monthlyExpenses: number;
+  accessibleSavings: number;
+  totalAssets: number;
+  backupMonths: number;
+  shortfall: number;
+  timestamp: string;
+  createdAt?: any;
+}
+
 export interface GoalItem {
   id: string;
   title: string;
@@ -173,6 +188,43 @@ export class FirestoreService {
       return decisions;
     } catch (error) {
       console.error('Error loading financial decisions from Firestore:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Save What-If Simulator analysis history to Firestore
+   */
+  async saveSimulatorRecord(userId: string, record: SimulatorHistoryRecord): Promise<void> {
+    if (!userId || !record?.id) return;
+    try {
+      const docRef = doc(this.db, 'users', userId, 'simulations', record.id);
+      await setDoc(docRef, {
+        ...record,
+        createdAt: serverTimestamp()
+      });
+      console.log('Simulator record saved to Firestore:', record);
+    } catch (error) {
+      console.error('Error saving simulator record to Firestore:', error);
+    }
+  }
+
+  /**
+   * Load What-If Simulator analysis history from Firestore
+   */
+  async loadSimulatorRecords(userId: string): Promise<SimulatorHistoryRecord[]> {
+    if (!userId) return [];
+    try {
+      const simCol = collection(this.db, 'users', userId, 'simulations');
+      const querySnapshot = await getDocs(simCol);
+
+      const records: SimulatorHistoryRecord[] = [];
+      querySnapshot.forEach(docSnap => {
+        records.push(docSnap.data() as SimulatorHistoryRecord);
+      });
+      return records;
+    } catch (error) {
+      console.warn('Could not load simulator history from Firestore:', error);
       return [];
     }
   }
@@ -360,4 +412,3 @@ export class FirestoreService {
     }
   }
 }
-
