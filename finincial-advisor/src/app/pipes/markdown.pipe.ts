@@ -22,16 +22,22 @@ export class MarkdownPipe implements PipeTransform {
     let text = String(value);
 
     // 1. Transform Score Block with Box-Drawing Lines (e.g. ━━━━━━━━━━━━ AFFORDABILITY SCORE: 90 / 100 ...)
-    const scoreBoxRegex = /━{3,}\s*[\r\n]+AFFORDABILITY SCORE:\s*(\d+)\s*\/\s*100\s*[\r\n]+([^\r\n]+)[\r\n]+\s*━{3,}/gi;
+    const scoreBoxRegex = /━{3,}\s*[\r\n]+(?:AFFORDABILITY|PREPAREDNESS)\s*SCORE:\s*(\d+)\s*\/\s*100\s*[\r\n]+([^\r\n]+)[\r\n]+\s*━{3,}/gi;
     text = text.replace(scoreBoxRegex, (_match, scoreStr, statusText) => {
       return this.generateScoreCardHtml(parseInt(scoreStr, 10), statusText.trim());
     });
 
     // Also handle score block without box drawing lines
-    const scoreSimpleRegex = /(?:^|[\r\n])AFFORDABILITY SCORE:\s*(\d+)\s*\/\s*100\s*[\r\n]+([^\r\n]+)/gi;
+    const scoreSimpleRegex = /(?:^|[\r\n])(?:AFFORDABILITY|PREPAREDNESS)\s*SCORE:\s*(\d+)\s*\/\s*100\s*[\r\n]+([^\r\n]+)/gi;
     text = text.replace(scoreSimpleRegex, (match, scoreStr, statusText) => {
       if (match.includes('affordability-score-card')) return match;
       return this.generateScoreCardHtml(parseInt(scoreStr, 10), statusText.trim());
+    });
+
+    // Handle "Your preparedness score: XX out of 100 \n This means: ..." format from Pipeline 21759
+    const prepScoreRegex = /(?:^|[\r\n])Your preparedness score:\s*[\r\n]*(\d+)\s*(?:out of 100|\/ 100)?\s*[\r\n]+(?:This means:\s*[\r\n]*)?([^\r\n]+)/gi;
+    text = text.replace(prepScoreRegex, (_match, scoreStr, statusText) => {
+      return this.generateScoreCardHtml(parseInt(scoreStr, 10), statusText.trim(), 'FINANCIAL PREPAREDNESS SCORE');
     });
 
     // 2. Remove remaining box drawing characters
@@ -49,16 +55,28 @@ export class MarkdownPipe implements PipeTransform {
       }</div>\n\n`;
     });
 
-    // 4. Transform Financial Advisor's Verdict into a single unified verdict card (eliminating double icon & duplicate header)
-    const verdictSectionRegex = /(?:^|[\r\n])(?:#{1,4}\s*)?FINANCIAL ADVISOR\'S VERDICT\s*[\r\n]+(?:>\s*(?:Recommendation:\s*)?([^\r\n]+)|([^\r\n]+))/gi;
+    // 4. Transform Financial Advisor's Verdict / Recommendation into unified verdict card
+    const verdictSectionRegex = /(?:^|[\r\n])(?:#{1,4}\s*)?(?:FINANCIAL ADVISOR\'S VERDICT|FINANCIAL ADVISOR VIEW)\s*[\r\n]+(?:>\s*(?:Recommendation:\s*)?([^\r\n]+)|([^\r\n]+))/gi;
     text = text.replace(verdictSectionRegex, (_match, blockquoteText, plainText) => {
       const verdictContent = (blockquoteText || plainText || '').trim();
       return `\n\n<div class="verdict-card"><div class="verdict-header"><span class="verdict-title">FINANCIAL ADVISOR'S VERDICT</span></div><div class="verdict-content"><p>${verdictContent}</p></div></div>\n\n`;
     });
 
+    // Transform RECOMMENDATION into callout
+    const recRegex = /(?:^|[\r\n])(?:#{1,4}\s*)?RECOMMENDATION\s*[\r\n]+([^\r\n]+)/gi;
+    text = text.replace(recRegex, (_match, recText) => {
+      return `\n\n<div class="quote-callout"><strong>💡 Strategic Recommendation:</strong><p>${recText.trim()}</p></div>\n\n`;
+    });
+
     // 5. Transform other Section Headers into clean headings
+    text = text.replace(/(?:^|[\r\n])FINANCIAL PREPAREDNESS CHECK(?=$|[\r\n])/gim, '\n## 🛡️ FINANCIAL PREPAREDNESS CHECK\n');
     text = text.replace(/(?:^|[\r\n])YOUR AFFORDABILITY SNAPSHOT(?=$|[\r\n])/gim, '\n### 🏆 YOUR AFFORDABILITY SNAPSHOT\n');
     text = text.replace(/(?:^|[\r\n])YOUR FINANCIAL DETAILS(?=$|[\r\n])/gim, '\n### 📋 YOUR FINANCIAL DETAILS\n');
+    text = text.replace(/(?:^|[\r\n])WHAT YOU MAY NEED(?=$|[\r\n])/gim, '\n### 💡 WHAT YOU MAY NEED\n');
+    text = text.replace(/(?:^|[\r\n])YOUR AVAILABLE MONEY(?=$|[\r\n])/gim, '\n### 💰 YOUR AVAILABLE MONEY\n');
+    text = text.replace(/(?:^|[\r\n])EASY-TO-ACCESS MONEY(?=$|[\r\n])/gim, '\n#### ⚡ EASY-TO-ACCESS MONEY\n');
+    text = text.replace(/(?:^|[\r\n])YOUR SAFETY BACKUP(?=$|[\r\n])/gim, '\n#### 🛡️ YOUR SAFETY BACKUP\n');
+    text = text.replace(/(?:^|[\r\n])SHORTFALL(?=$|[\r\n])/gim, '\n#### ⚠️ SHORTFALL ASSESSMENT\n');
     text = text.replace(/(?:^|[\r\n])POST-PURCHASE IMPACT(?=$|[\r\n])/gim, '\n#### 📊 POST-PURCHASE IMPACT\n');
     text = text.replace(/(?:^|[\r\n])KEY INSIGHTS(?=$|[\r\n])/gim, '\n#### 💡 KEY INSIGHTS\n');
     text = text.replace(/(?:^|[\r\n])STILL NEEDED(?=$|[\r\n])/gim, '\n#### ⏳ STILL NEEDED\n');
@@ -71,15 +89,15 @@ export class MarkdownPipe implements PipeTransform {
       const trimmed = content.trim();
 
       // Safe / Positive status
-      if (/^(Positive|Healthy|Safe|Safe\s*\(>3m\)|Low Pressure)$/i.test(trimmed)) {
+      if (/^(Positive|Healthy|Safe|Safe\s*\(>3m\)|Low Pressure|Well Prepared)$/i.test(trimmed)) {
         return `<td${attrs}><span class="cell-badge badge-positive"><span class="badge-dot"></span>${trimmed}</span></td>`;
       }
       // Warning / Caution status
-      if (/^(Needs Caution|Caution|Manageable|Moderate|Possible|Low|Moderate Pressure)$/i.test(trimmed)) {
+      if (/^(Needs Caution|Caution|Manageable|Moderate|Possible|Low|Moderate Pressure|Mostly Prepared)$/i.test(trimmed)) {
         return `<td${attrs}><span class="cell-badge badge-warning"><span class="badge-dot"></span>${trimmed}</span></td>`;
       }
       // Danger / High Risk status
-      if (/^(Deficit|Empty|High Risk|At Risk\s*\(<1m\)|Critical|At Risk|High Pressure)$/i.test(trimmed)) {
+      if (/^(Deficit|Empty|High Risk|At Risk\s*\(<1m\)|Critical|At Risk|High Pressure|Needs Improvement|Not Prepared)$/i.test(trimmed)) {
         return `<td${attrs}><span class="cell-badge badge-danger"><span class="badge-dot"></span>${trimmed}</span></td>`;
       }
       // Not provided placeholder status
@@ -111,26 +129,26 @@ export class MarkdownPipe implements PipeTransform {
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
-  private generateScoreCardHtml(score: number, statusText: string): string {
+  private generateScoreCardHtml(score: number, statusText: string, title: string = 'AFFORDABILITY SCORE'): string {
     let scoreClass = 'score-healthy';
-    let tierTag = 'Healthy & Comfortable';
+    let tierTag = 'Healthy & Prepared';
     let scoreGrad = 'healthy-gradient';
 
     if (score >= 80) {
       scoreClass = 'score-healthy';
-      tierTag = 'Healthy & Comfortable';
+      tierTag = 'Well Prepared';
       scoreGrad = 'healthy-gradient';
-    } else if (score >= 65) {
+    } else if (score >= 60) {
       scoreClass = 'score-manageable';
-      tierTag = 'Manageable';
+      tierTag = 'Mostly Prepared';
       scoreGrad = 'manageable-gradient';
     } else if (score >= 40) {
       scoreClass = 'score-caution';
-      tierTag = 'Needs Caution';
+      tierTag = 'Needs Improvement';
       scoreGrad = 'caution-gradient';
     } else {
       scoreClass = 'score-risk';
-      tierTag = 'High Risk';
+      tierTag = 'High Risk / Unprepared';
       scoreGrad = 'risk-gradient';
     }
 
@@ -143,7 +161,7 @@ export class MarkdownPipe implements PipeTransform {
       </div>
       <div class="score-right">
         <div class="score-badge-header">
-          <span class="score-title">AFFORDABILITY SCORE</span>
+          <span class="score-title">${title}</span>
           <span class="score-tier-tag">${tierTag}</span>
         </div>
         <p class="score-status-desc">${statusText}</p>

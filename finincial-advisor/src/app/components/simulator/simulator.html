@@ -2,31 +2,61 @@
   <!-- Top Header Bar -->
   <header class="page-header">
     <div class="header-titles">
-      <h1 class="page-title">What-If Simulator</h1>
-      <p class="page-subtitle">Explore projected outcomes by adjusting your financial parameters and testing scenarios.</p>
+      <div class="title-with-pill">
+        <h1 class="page-title">What-If Simulator</h1>
+        <span class="version-pill">Interactive Stress Tester</span>
+      </div>
+      <p class="page-subtitle">Stress-test your financial resilience against life events, emergencies, and liquidity shocks.</p>
     </div>
 
     <div class="header-right">
-      <div class="search-bar">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Search..." />
+      <div class="portfolio-summary-pill" title="Total Net Worth Tracked">
+        <span class="pill-label">Total Net Worth:</span>
+        <strong class="pill-value">₹{{ totalNetWorth | number }}</strong>
       </div>
 
+      <!-- Analyze with Aava Button in Header -->
+      <button 
+        class="header-btn-aava" 
+        [class.btn-loading]="isAnalyzing"
+        (click)="analyzeWithAava()" 
+        [disabled]="isAnalyzing"
+        title="Analyze simulation with Aava AI (Pipeline 21759)"
+      >
+        <div class="sparkle-icon">
+          @if (isAnalyzing) {
+            <svg class="spin-animation" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>
+          } @else {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          }
+        </div>
+        <span>{{ isAnalyzing ? 'Analyzing...' : 'Analyze with Aava' }}</span>
+        @if (!isAnalyzing) {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        }
+      </button>
+
       <div class="header-actions">
-        <button class="icon-btn" title="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
-        <button class="icon-btn" title="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
-        <div class="user-avatar-btn" (click)="authService.openModal('profile')" style="cursor: pointer;" title="View Profile"><img [src]="authService.userProfile().avatarUrl" alt="Avatar" /></div>
+        <button class="icon-btn" title="Reset All Parameters" (click)="resetParameters()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+        <div class="user-avatar-btn" (click)="authService.openModal('profile')" style="cursor: pointer;" title="View Profile">
+          <img [src]="authService.userProfile().avatarUrl" alt="Avatar" />
+        </div>
       </div>
     </div>
   </header>
 
-  <!-- Main Grid Layout -->
+  <!-- 2-Column Simulator Layout (Left: Controls, Right: Analysis Result in White Space) -->
   <div class="simulator-grid-layout">
-    <!-- Left Column: Controls (Scenarios & Sliders) -->
+    <!-- Left Column: Controls & Parameters -->
     <div class="controls-column">
       <!-- Quick Scenarios Card -->
       <div class="card scenarios-card">
-        <h4 class="card-section-title">QUICK SCENARIOS</h4>
+        <div class="card-header-row">
+          <h4 class="card-section-title">QUICK SCENARIOS</h4>
+          <span class="scenarios-count-tag">{{ scenarios.length }} Scenarios</span>
+        </div>
 
         <div class="scenarios-list">
           @for (sc of scenarios; track sc.id) {
@@ -36,14 +66,17 @@
               (click)="selectScenario(sc.id)"
             >
               <div class="btn-left">
-                @if (sc.id === 'job_loss') {
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
-                } @else if (sc.id === 'home_purchase') {
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                } @else if (sc.id === 'sabbatical') {
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.2c.3.4.8.5 1.3.3l.5-.3c.4-.2.6-.6.5-1.1z"/></svg>
-                }
-                <span>{{ sc.title }}</span>
+                <div class="scenario-icon-wrap" [class.icon-active]="sc.selected">
+                  @if (sc.id === 'job_loss') {
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
+                  } @else if (sc.id === 'medical_emergency') {
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                  }
+                </div>
+                <div class="scenario-btn-text">
+                  <span class="scenario-title">{{ sc.title }}</span>
+                  <span class="scenario-category">{{ sc.category }}</span>
+                </div>
               </div>
               
               @if (sc.selected) {
@@ -59,284 +92,501 @@
       <!-- Base Parameters Sliders Card -->
       <div class="card sliders-card">
         <div class="sliders-header">
-          <h4 class="card-section-title">BASE PARAMETERS</h4>
-          <button class="btn-reset" (click)="resetParameters()">Reset</button>
+          <div>
+            <h4 class="card-section-title">BASE PARAMETERS</h4>
+            <span class="sliders-subtitle">Parameters for {{ selectedScenario.title }}</span>
+          </div>
+          <button class="btn-reset" (click)="resetParameters()">Reset to 0</button>
         </div>
 
-        <div class="slider-group">
-          <div class="slider-label-row">
-            <span class="label">Monthly Income</span>
-            <span class="value">₹{{ monthlyIncome | number }}</span>
+        <div class="sliders-content">
+          <!-- Group 1: Scenario Shock & Living Variables -->
+          <div class="param-category-divider">
+            <span class="divider-title">{{ selectedScenario.title }} Variables</span>
           </div>
-          <input 
-            type="range" 
-            min="50000" 
-            max="300000" 
-            step="5000" 
-            [(ngModel)]="monthlyIncome" 
-            (ngModelChange)="onIncomeChange()"
-            class="custom-range" 
-          />
-        </div>
 
-        <div class="slider-group">
-          <div class="slider-label-row">
-            <span class="label">Monthly Expenses</span>
-            <span class="value">₹{{ monthlyExpenses | number }}</span>
-          </div>
-          <input 
-            type="range" 
-            min="20000" 
-            max="150000" 
-            step="2500" 
-            [(ngModel)]="monthlyExpenses" 
-            (ngModelChange)="onExpensesChange()"
-            class="custom-range" 
-          />
-        </div>
+          <!-- Scenario: Job Loss -->
+          @if (selectedScenario.id === 'job_loss') {
+            <!-- Monthly Expenses -->
+            <div class="slider-group">
+              <div class="slider-label-row">
+                <span class="label">Monthly Expenses</span>
+                <span class="value">₹{{ monthlyExpenses | number }}</span>
+              </div>
+              <input 
+                type="range" 
+                min="0" 
+                max="250000" 
+                step="2500" 
+                [(ngModel)]="monthlyExpenses" 
+                class="custom-range" 
+              />
+            </div>
 
-        <div class="slider-group">
-          <div class="slider-label-row">
-            <span class="label">Monthly Savings</span>
-            <span class="value">₹{{ monthlySavings | number }}</span>
+            <!-- Job Loss Duration -->
+            <div class="slider-group highlighted-param">
+              <div class="slider-label-row">
+                <span class="label">Job Loss Duration</span>
+                <span class="value">{{ jobLossMonths }} Months</span>
+              </div>
+              <input 
+                type="range" 
+                min="0" 
+                max="24" 
+                step="1" 
+                [(ngModel)]="jobLossMonths" 
+                class="custom-range range-amber" 
+              />
+            </div>
+          }
+
+          <!-- Scenario: Medical Emergency -->
+          @if (selectedScenario.id === 'medical_emergency') {
+            <!-- Medical Bill Shock -->
+            <div class="slider-group highlighted-param">
+              <div class="slider-label-row">
+                <span class="label">Medical Bill Shock</span>
+                <span class="value">₹{{ medicalBill | number }}</span>
+              </div>
+              <input 
+                type="range" 
+                min="0" 
+                max="2000000" 
+                step="25000" 
+                [(ngModel)]="medicalBill" 
+                class="custom-range range-rose" 
+              />
+            </div>
+
+            <!-- Health Insurance Cover -->
+            <div class="slider-group highlighted-param">
+              <div class="slider-label-row">
+                <span class="label">Health Insurance Cover</span>
+                <span class="value">₹{{ insurance | number }}</span>
+              </div>
+              <input 
+                type="range" 
+                min="0" 
+                max="3000000" 
+                step="50000" 
+                [(ngModel)]="insurance" 
+                class="custom-range range-green" 
+              />
+            </div>
+
+            <!-- Monthly Expenses -->
+            <div class="slider-group">
+              <div class="slider-label-row">
+                <span class="label">Monthly Expenses</span>
+                <span class="value">₹{{ monthlyExpenses | number }}</span>
+              </div>
+              <input 
+                type="range" 
+                min="0" 
+                max="250000" 
+                step="2500" 
+                [(ngModel)]="monthlyExpenses" 
+                class="custom-range" 
+              />
+            </div>
+          }
+
+          <!-- Group 2: Liquidity & Asset Holdings (Portfolio Reserves) -->
+          <div class="param-category-divider">
+            <span class="divider-title">Liquidity & Asset Holdings</span>
           </div>
-          <input 
-            type="range" 
-            min="5000" 
-            max="150000" 
-            step="2500" 
-            [(ngModel)]="monthlySavings" 
-            class="custom-range" 
-          />
+
+          <!-- Savings Bank Account Balance -->
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <span class="label">Savings Bank Account Balance</span>
+              <span class="value">₹{{ savingsBankBalance | number }}</span>
+            </div>
+            <input 
+              type="range" 
+              min="0" 
+              max="1000000" 
+              step="10000" 
+              [(ngModel)]="savingsBankBalance" 
+              class="custom-range range-blue" 
+            />
+          </div>
+
+          <!-- Liquid Fund -->
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <span class="label">Liquid Fund (Mutual Funds)</span>
+              <span class="value">₹{{ liquidFund | number }}</span>
+            </div>
+            <input 
+              type="range" 
+              min="0" 
+              max="1500000" 
+              step="25000" 
+              [(ngModel)]="liquidFund" 
+              class="custom-range range-green" 
+            />
+          </div>
+
+          <!-- FD Investment -->
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <span class="label">FD Investment (Fixed Deposit)</span>
+              <span class="value">₹{{ fdInvestment | number }}</span>
+            </div>
+            <input 
+              type="range" 
+              min="0" 
+              max="2500000" 
+              step="25000" 
+              [(ngModel)]="fdInvestment" 
+              class="custom-range range-amber" 
+            />
+          </div>
+
+          <!-- Gold Investment -->
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <span class="label">Gold Investment</span>
+              <span class="value">₹{{ goldInvestment | number }}</span>
+            </div>
+            <input 
+              type="range" 
+              min="0" 
+              max="2000000" 
+              step="25000" 
+              [(ngModel)]="goldInvestment" 
+              class="custom-range range-yellow" 
+            />
+          </div>
+
+          <!-- Market Investment -->
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <span class="label">Market Investment (Equity)</span>
+              <span class="value">₹{{ marketInvestment | number }}</span>
+            </div>
+            <input 
+              type="range" 
+              min="0" 
+              max="4000000" 
+              step="50000" 
+              [(ngModel)]="marketInvestment" 
+              class="custom-range range-purple" 
+            />
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Right Column: Scenario Analysis & Projections -->
-    <div class="analysis-column">
-      <!-- Scenario Analysis Hero Card -->
-      <div class="scenario-hero-card">
-        <div class="hero-top">
-          <div class="hero-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B4BD6" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          </div>
-          <div class="hero-title-box">
-            <h3>Scenario Analysis: {{ selectedScenario.title }}</h3>
-            <p>{{ selectedScenario.description }}</p>
-          </div>
-        </div>
-
-        <div class="coverage-metrics-row">
-          <div class="coverage-box">
-            <span class="box-title">CURRENT COVERAGE</span>
-            <span class="box-value red-value">{{ currentCoverageMonths }} Months (₹2,25,000)</span>
-          </div>
-          <div class="coverage-box">
-            <span class="box-title">REQUIRED COVERAGE (6 MO)</span>
-            <span class="box-value">₹{{ requiredCoverageAmount | number }}</span>
-          </div>
-        </div>
-
-        <div class="recommendation-pill-box">
-          <div class="rec-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00A389" stroke-width="2.5"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/></svg>
-          </div>
-          <p class="rec-text">
-            <strong>Recommendation:</strong> Increase automated transfers to your emergency fund by <strong>₹15,000/mo</strong> to reach the target safely.
-          </p>
-        </div>
-      </div>
-
-      <!-- Path Comparison Grid (2 Cards Side by Side) -->
-      <div class="paths-comparison-grid">
-        <!-- Current Financial Path -->
-        <div class="path-card">
-          <h4 class="path-title blue-title">CURRENT FINANCIAL PATH</h4>
-
-          <div class="path-metric">
-            <span class="meta-label">Projected Net Worth (5 Yrs)</span>
-            <span class="meta-value">₹{{ currentNetWorth5Yrs | number }}</span>
-          </div>
-
-          <div class="path-meta-row">
-            <span class="meta-label">House Downpayment Goal</span>
-            <span class="date-badge blue-badge">{{ currentGoalDate }}</span>
-          </div>
-
-          <div class="path-meta-row">
-            <span class="meta-label">Financial Independence</span>
-            <span class="age-badge">Age {{ currentFiAge }}</span>
-          </div>
-        </div>
-
-        <!-- Simulated Path (Selected Scenario) -->
-        <div class="path-card brown-border">
-          <h4 class="path-title brown-title">SIMULATED PATH ({{ selectedScenario.title | uppercase }})</h4>
-
-          <div class="path-metric">
-            <span class="meta-label">Projected Net Worth (5 Yrs)</span>
-            <div class="val-with-down">
-              <span class="meta-value">₹{{ simulatedNetWorth5Yrs | number }}</span>
-              <span class="down-tag">↓{{ dropPercentage }}%</span>
+    <!-- Right Column: Inline Visual Aava AI Analysis & Charts Panel -->
+    <div class="analysis-panel-column">
+      <div class="card analysis-panel-card">
+        <!-- Panel Header -->
+        <div class="panel-header">
+          <div class="panel-header-left">
+            <div class="panel-icon-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </div>
+            <div class="panel-header-titles">
+              <h3 class="panel-title">Financial Preparedness Report</h3>
+              <span class="panel-subtitle">Pipeline 21759 • {{ selectedScenario.title }} Stress Test</span>
             </div>
           </div>
 
-          <div class="path-meta-row">
-            <span class="meta-label">House Downpayment Goal</span>
-            <span class="date-badge brown-badge">{{ simulatedGoalDate }}</span>
-          </div>
-
-          <div class="path-meta-row">
-            <span class="meta-label">Financial Independence</span>
-            <span class="age-badge">Age {{ simulatedFiAge }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Wealth Projection Timeline Chart Card -->
-      <div class="card chart-card">
-        <div class="chart-header">
-          <div class="header-left">
-            <h4 class="card-section-title">Wealth Projection Timeline</h4>
-            <span class="chart-subtitle">5-Year Growth vs Simulated Scenario</span>
-          </div>
-          <div class="chart-legend">
-            <div class="legend-chip blue-chip">
-              <span class="legend-line solid-line"></span>
-              <span>Current Path</span>
-            </div>
-            <div class="legend-chip amber-chip">
-              <span class="legend-line dashed-line"></span>
-              <span>Simulated Path</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="timeline-svg-wrapper">
-          <!-- Floating Event Annotation Badge -->
-          <div class="floating-event-tag" style="left: 23.5%;">
-            <span class="event-pulse-dot"></span>
-            <span class="event-text">Event: {{ selectedScenario.title }}</span>
-          </div>
-
-          <svg viewBox="0 0 600 180" class="timeline-svg">
-            <defs>
-              <linearGradient id="currentGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#0B4BD6" stop-opacity="0.22"/>
-                <stop offset="60%" stop-color="#0B4BD6" stop-opacity="0.06"/>
-                <stop offset="100%" stop-color="#0B4BD6" stop-opacity="0.0"/>
-              </linearGradient>
-              <filter id="lineGlow" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0B4BD6" flood-opacity="0.3"/>
-              </filter>
-              <filter id="nodeShadow" x="-30%" y="-30%" width="160%" height="160%">
-                <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.15"/>
-              </filter>
-            </defs>
-
-            <!-- Horizontal Background Grid Lines -->
-            <line x1="35" y1="45" x2="565" y2="45" stroke="#F1F5F9" stroke-width="1.5" stroke-dasharray="4 4"/>
-            <line x1="35" y1="90" x2="565" y2="90" stroke="#F1F5F9" stroke-width="1.5" stroke-dasharray="4 4"/>
-            <line x1="35" y1="135" x2="565" y2="135" stroke="#F1F5F9" stroke-width="1.5" stroke-dasharray="4 4"/>
-
-            <!-- Area Fill under Current Path -->
-            <path [attr.d]="currentAreaD" fill="url(#currentGrad)"/>
-
-            <!-- Current Path Solid Curve -->
-            <path 
-              [attr.d]="currentPathD" 
-              fill="none" 
-              stroke="#0B4BD6" 
-              stroke-width="3.5" 
-              stroke-linecap="round" 
-              stroke-linejoin="round"
-              filter="url(#lineGlow)"
-            />
-
-            <!-- Simulated Path Dashed Curve -->
-            <path 
-              [attr.d]="simulatedPathD" 
-              fill="none" 
-              stroke="#D97706" 
-              stroke-width="2.5" 
-              stroke-linecap="round"
-              stroke-dasharray="6 4"
-            />
-
-            <!-- Event Marker Vertical Dotted Line -->
-            <line x1="141" y1="28" x2="141" y2="160" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="3 3"/>
-            <circle cx="141" cy="155" r="4.5" fill="#EF4444" filter="url(#nodeShadow)"/>
-
-            <!-- Interactive Data Nodes -->
-            @for (pt of chartPoints; track pt.yearLabel) {
-              <g 
-                class="chart-node-group"
-                (mouseenter)="activeHoverPoint = pt"
-                (mouseleave)="activeHoverPoint = null"
-              >
-                <!-- Vertical Hover Guideline -->
-                <line 
-                  [attr.x1]="pt.cx" 
-                  y1="25" 
-                  [attr.x2]="pt.cx" 
-                  y2="165" 
-                  stroke="rgba(11, 75, 214, 0.15)" 
-                  stroke-width="1"
-                  stroke-dasharray="2 2"
-                  class="hover-guideline"
-                />
-
-                <!-- Current Path Node -->
-                <circle 
-                  [attr.cx]="pt.cx" 
-                  [attr.cy]="pt.cyCurrent" 
-                  r="6" 
-                  fill="#0B4BD6" 
-                  stroke="#FFFFFF" 
-                  stroke-width="2.5"
-                  filter="url(#nodeShadow)"
-                  class="node-circle"
-                />
-
-                <!-- Simulated Path Node -->
-                <circle 
-                  [attr.cx]="pt.cx" 
-                  [attr.cy]="pt.cySimulated" 
-                  r="5" 
-                  fill="#D97706" 
-                  stroke="#FFFFFF" 
-                  stroke-width="2"
-                  filter="url(#nodeShadow)"
-                  class="node-circle"
-                />
-              </g>
-            }
-          </svg>
-
-          <!-- Hover Tooltip -->
-          @if (activeHoverPoint) {
-            <div class="chart-tooltip-box" [style.left.px]="activeHoverPoint.cx * 0.95">
-              <span class="tooltip-title">{{ activeHoverPoint.yearLabel }}</span>
-              <div class="tooltip-row">
-                <span class="dot blue-dot"></span>
-                <span>Current: <strong>₹{{ activeHoverPoint.currentVal | number }}</strong></span>
-              </div>
-              <div class="tooltip-row">
-                <span class="dot amber-dot"></span>
-                <span>Simulated: <strong>₹{{ activeHoverPoint.simulatedVal | number }}</strong></span>
-              </div>
+          @if (reportData && !isAnalyzing) {
+            <div class="panel-header-actions">
+              <button class="btn-panel-action" (click)="copyAnalysis()" title="Copy Analysis Summary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span>{{ copiedSuccess ? 'Copied!' : 'Copy' }}</span>
+              </button>
+              
+              <button class="btn-panel-primary" (click)="continueInChat()" title="Discuss in AI Advisor Chat">
+                <span>Discuss in Chat</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
             </div>
           }
+        </div>
 
-          <!-- Timeline X-Axis Years -->
-          <div class="timeline-years">
-            <span class="year-label">Today</span>
-            <span class="year-label">Year 1</span>
-            <span class="year-label">Year 2</span>
-            <span class="year-label">Year 3</span>
-            <span class="year-label">Year 4</span>
-            <span class="year-label">Year 5</span>
-          </div>
+        <!-- Panel Body: Dynamic States -->
+        <div class="panel-body">
+          <!-- State 1: Analyzing / Loading -->
+          @if (isAnalyzing) {
+            <div class="panel-loading-state">
+              <div class="pulse-loader">
+                <div class="pulse-ring"></div>
+                <div class="pulse-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                </div>
+              </div>
+              <h4 class="loading-title">Analyzing your financial resilience...</h4>
+            </div>
+          } 
+
+          <!-- State 2: Visual Charts & Preparedness Dashboard -->
+          @else if (reportData) {
+            <div class="visual-dashboard-content">
+              
+              <!-- 1. Hero Preparedness Score Card -->
+              <div class="hero-score-banner" [class]="'tier-' + reportData.status.toLowerCase().replace(' ', '-')">
+                <div class="score-circle-wrap">
+                  <svg class="score-donut-svg" viewBox="0 0 100 100">
+                    <circle class="score-bg-ring" cx="50" cy="50" r="42" stroke-width="8" fill="none" />
+                    <circle 
+                      class="score-fill-ring" 
+                      cx="50" 
+                      cy="50" 
+                      r="42" 
+                      stroke-width="8" 
+                      fill="none"
+                      stroke-linecap="round"
+                      [attr.stroke-dasharray]="263.89"
+                      [attr.stroke-dashoffset]="263.89 - (reportData.score / 100) * 263.89"
+                    />
+                  </svg>
+                  <div class="score-inner-text">
+                    <span class="score-num">{{ reportData.score }}</span>
+                    <span class="score-max">/100</span>
+                  </div>
+                </div>
+
+                <div class="score-info-column">
+                  <div class="score-tier-badge-row">
+                    <span class="tier-pill">{{ reportData.status }}</span>
+                    <span class="scenario-tag">Situation: {{ reportData.situation }}</span>
+                  </div>
+                  <h3 class="score-heading">Financial Preparedness Score</h3>
+                  <p class="score-desc">{{ reportData.statusDescription }}</p>
+                </div>
+              </div>
+
+              <!-- 2. Interactive Charts Grid (Comparison Bar Chart & Asset Breakdown Donut) -->
+              <div class="charts-row-grid">
+                
+                <!-- Chart 1: Scenario Shock vs Available Reserves (Bar Chart) -->
+                <div class="chart-box-card">
+                  <div class="chart-card-header">
+                    <div class="chart-title-wrap">
+                      <span class="chart-icon">📊</span>
+                      <div>
+                        <h4 class="chart-card-title">Scenario Shock vs Available Reserves</h4>
+                        <span class="chart-card-sub">Required need compared against your liquidity tiers</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="comp-bars-list">
+                    @for (item of reportData.scenarioComparison; track item.label) {
+                      <div class="comp-bar-item">
+                        <div class="comp-bar-meta">
+                          <div class="bar-left-meta">
+                            <span class="bar-label">{{ item.label }}</span>
+                            @if (item.badge) {
+                              <span class="bar-badge" [style.color]="item.color" [style.background]="item.color + '15'">{{ item.badge }}</span>
+                            }
+                          </div>
+                          <strong class="bar-amount" [style.color]="item.color">₹{{ item.amount | number }}</strong>
+                        </div>
+                        <div class="comp-track">
+                          <div 
+                            class="comp-fill" 
+                            [style.width.%]="item.percent" 
+                            [style.background]="item.color"
+                          ></div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Chart 2: Asset Allocation & Liquidity Breakdown (Donut Chart) -->
+                <div class="chart-box-card">
+                  <div class="chart-card-header">
+                    <div class="chart-title-wrap">
+                      <span class="chart-icon">🍩</span>
+                      <div>
+                        <h4 class="chart-card-title">Asset Allocation & Liquidity</h4>
+                        <span class="chart-card-sub">Distribution of total portfolio reserves</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="donut-chart-container">
+                    <div class="donut-svg-wrap">
+                      <svg class="donut-svg" viewBox="0 0 160 160">
+                        <circle cx="80" cy="80" r="60" stroke="#F1F5F9" stroke-width="18" fill="none" />
+                        @for (slice of reportData.fundsBreakdown; track slice.label) {
+                          @if (slice.amount > 0) {
+                            <circle 
+                              cx="80" 
+                              cy="80" 
+                              r="60" 
+                              stroke-width="18" 
+                              fill="none"
+                              [attr.stroke]="slice.color"
+                              [attr.stroke-dasharray]="((slice.percent / 100) * 376.99) + ' 376.99'"
+                              [attr.stroke-dashoffset]="slice.offset"
+                              class="donut-slice"
+                            />
+                          }
+                        }
+                      </svg>
+                      <div class="donut-center-stat">
+                        <span class="stat-sub">Total Assets</span>
+                        <strong class="stat-val">₹{{ reportData.totalAssets | number }}</strong>
+                      </div>
+                    </div>
+
+                    <!-- Legend Items List -->
+                    <div class="donut-legend-list">
+                      @for (item of reportData.fundsBreakdown; track item.label) {
+                        <div class="legend-row" [class.dimmed]="item.amount === 0">
+                          <div class="legend-left">
+                            <span class="legend-dot" [style.background]="item.color"></span>
+                            <span class="legend-name">{{ item.label }}</span>
+                          </div>
+                          <div class="legend-right">
+                            <span class="legend-pct">{{ item.percent }}%</span>
+                            <strong class="legend-val">₹{{ item.amount | number }}</strong>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- 3. Key Financial Snapshot Metric Cards (3 Columns) -->
+              <div class="metrics-triplet-grid">
+                <!-- Metric 1: What You May Need -->
+                <div class="metric-info-card">
+                  <div class="metric-card-top">
+                    <span class="metric-icon">💡</span>
+                    <span class="metric-tag">What You May Need</span>
+                  </div>
+                  <div class="metric-primary-val">₹{{ reportData.amountStillToCover | number }}</div>
+                  <span class="metric-desc-small">Net Shock After Insurance</span>
+                  <div class="metric-sub-rows">
+                    <div class="sub-row">
+                      <span>Total Required:</span>
+                      <strong>₹{{ reportData.requiredAmount | number }}</strong>
+                    </div>
+                    <div class="sub-row">
+                      <span>Insurance Applied:</span>
+                      <strong class="text-green">- ₹{{ reportData.insuranceConsidered | number }}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Metric 2: Safety Runway -->
+                <div class="metric-info-card">
+                  <div class="metric-card-top">
+                    <span class="metric-icon">🛡️</span>
+                    <span class="metric-tag">Safety Runway</span>
+                  </div>
+                  <div class="metric-primary-val text-blue">{{ reportData.backupMonths }} Months</div>
+                  <span class="metric-desc-small">Living Expenses Covered</span>
+                  <div class="runway-benchmark-bar">
+                    <div class="runway-fill" [style.width.%]="Math.min(100, (reportData.backupMonths / 12) * 100)"></div>
+                  </div>
+                  <div class="benchmark-markers">
+                    <span>0m</span>
+                    <span>3m (Min)</span>
+                    <span>6m+ (Safe)</span>
+                    <span>12m</span>
+                  </div>
+                </div>
+
+                <!-- Metric 3: Shortfall Assessment -->
+                <div class="metric-info-card">
+                  <div class="metric-card-top">
+                    <span class="metric-icon">⚡</span>
+                    <span class="metric-tag">Shortfall Status</span>
+                  </div>
+                  @if (reportData.shortfall > 0) {
+                    <div class="metric-primary-val text-rose">₹{{ reportData.shortfall | number }}</div>
+                    <span class="metric-desc-small">Additional Liquid Cash Needed</span>
+                    <div class="status-pill-badge pill-danger">⚠️ Potential Shortfall</div>
+                  } @else {
+                    <div class="metric-primary-val text-green">₹0</div>
+                    <span class="metric-desc-small">Fully Covered by Liquid Cash</span>
+                    <div class="status-pill-badge pill-success">✅ Zero Shortfall</div>
+                  }
+                </div>
+              </div>
+
+              <!-- 4. Financial Advisor Verdict & Recommendation Callout -->
+              <div class="verdict-banner-card">
+                <div class="verdict-top-row">
+                  <div class="advisor-badge">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <span>Financial Advisor Verdict</span>
+                  </div>
+                  <span class="verdict-tier-chip">{{ reportData.status }}</span>
+                </div>
+                <p class="verdict-text">{{ reportData.advisorVerdict }}</p>
+
+                <!-- Recommendation Callout -->
+                <div class="recommendation-callout">
+                  <div class="rec-icon">🎯</div>
+                  <div class="rec-content">
+                    <strong class="rec-title">Strategic Action Step:</strong>
+                    <p class="rec-desc">{{ reportData.recommendation }}</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          } 
+
+          <!-- State 3: Error State -->
+          @else if (analysisError) {
+            <div class="panel-error-state">
+              <div class="error-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <h4>Analysis Request Failed</h4>
+              <p>{{ analysisError }}</p>
+              <button class="btn-retry" (click)="analyzeWithAava()">Retry Analysis</button>
+            </div>
+          } 
+
+          <!-- State 4: Initial Empty State -->
+          @else {
+            <div class="panel-empty-state">
+              <div class="empty-icon-wrap">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              </div>
+              <h3 class="empty-title">Ready to Stress-Test Your Finances</h3>
+              <p class="empty-desc">
+                Select a scenario and adjust your base parameters on the left. When you're ready, click 
+                <strong>"Analyze with Aava"</strong> to generate your interactive charts, resilience score, and financial strategy.
+              </p>
+
+              <!-- Quick Parameter Summary Badges -->
+              <div class="empty-summary-grid">
+                <div class="summary-box">
+                  <span class="box-label">Selected Scenario</span>
+                  <strong class="box-val">{{ selectedScenario.title }}</strong>
+                </div>
+                <div class="summary-box">
+                  <span class="box-label">Accessible Savings</span>
+                  <strong class="box-val">₹{{ immediateLiquidCash | number }}</strong>
+                </div>
+                <div class="summary-box">
+                  <span class="box-label">Total Emergency Pool</span>
+                  <strong class="box-val">₹{{ totalEmergencyPool | number }}</strong>
+                </div>
+              </div>
+
+              <button class="btn-run-initial" (click)="analyzeWithAava()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <span>Analyze with Aava Now</span>
+              </button>
+            </div>
+          }
         </div>
       </div>
     </div>
