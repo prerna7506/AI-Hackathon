@@ -108,6 +108,10 @@ export class SimulatorComponent {
     this.scenarios.forEach(sc => sc.selected = (sc.id === id));
   }
 
+  openSignInModal(): void {
+    this.authService.openModal('auth');
+  }
+
   resetParameters(): void {
     this.monthlyExpenses = 0;
     this.jobLossMonths = 0;
