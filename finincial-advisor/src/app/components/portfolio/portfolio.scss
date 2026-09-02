@@ -7,6 +7,7 @@
     font-size: 1.15rem;
     font-weight: 800;
     color: var(--text-main);
+    letter-spacing: -0.3px;
   }
 
   .portfolio-list {
@@ -24,18 +25,18 @@
       box-shadow: var(--shadow-sm);
 
       &:hover {
-        border-color: rgba(11, 75, 214, 0.4);
+        border-color: var(--color-primary);
         transform: translateY(-1px);
 
         .card-header .btn-delete-goal {
-          opacity: 0.7;
+          opacity: 0.8;
         }
       }
 
       &.selected {
         border-color: var(--color-primary);
-        box-shadow: 0 4px 16px rgba(11, 75, 214, 0.12);
-        background: #FFFFFF;
+        box-shadow: 0 4px 16px var(--color-primary-glow);
+        background: var(--bg-card);
       }
 
       .card-header {
@@ -48,7 +49,7 @@
           width: 36px;
           height: 36px;
           border-radius: 8px;
-          background: var(--bg-blue-light);
+          background: var(--color-primary-light);
           color: var(--color-primary);
           display: flex;
           align-items: center;
@@ -82,8 +83,8 @@
 
           &:hover {
             opacity: 1 !important;
-            background: #FEE2E2;
-            color: #DC2626;
+            background: var(--color-danger-bg);
+            color: var(--color-danger-text);
             transform: scale(1.08);
           }
         }
@@ -114,7 +115,7 @@
 
         .progress-track {
           height: 6px;
-          background: var(--bg-blue-light);
+          background: var(--slider-track);
           border-radius: 99px;
           overflow: hidden;
 

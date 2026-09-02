@@ -4,7 +4,10 @@
   height: 100vh;
   max-height: 100vh;
   background: var(--bg-app);
+  color: var(--text-main);
   overflow: hidden;
+  position: relative;
+  transition: background-color 0.25s ease;
 }
 
 .app-main {
@@ -14,6 +17,8 @@
   height: 100vh;
   max-height: 100vh;
   overflow-y: auto;
+  background: var(--bg-app);
+  position: relative;
 }
 
 .global-toast-notification {
@@ -27,14 +32,15 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    background: #0F172A;
-    color: #FFFFFF;
+    background: var(--bg-card-elevated);
+    color: var(--text-main);
     padding: 14px 20px;
     border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-lg);
     font-size: 0.88rem;
     font-weight: 700;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-card);
+    backdrop-filter: blur(12px);
 
     svg {
       flex-shrink: 0;

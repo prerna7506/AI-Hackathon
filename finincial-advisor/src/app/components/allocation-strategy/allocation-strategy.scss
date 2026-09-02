@@ -7,6 +7,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
 
   .card-header {
     display: flex;
@@ -16,6 +17,11 @@
 
     .header-icon {
       margin-top: 2px;
+      color: var(--color-primary);
+
+      svg {
+        stroke: var(--color-primary);
+      }
     }
 
     .card-title {
@@ -23,6 +29,7 @@
       font-weight: 800;
       color: var(--text-main);
       line-height: 1.25;
+      letter-spacing: -0.3px;
     }
   }
 
@@ -61,7 +68,7 @@
 
       .item-track {
         height: 7px;
-        background: var(--bg-blue-light);
+        background: var(--slider-track);
         border-radius: 99px;
         overflow: hidden;
 

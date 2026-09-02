@@ -1,38 +1,95 @@
 :root {
-  --font-primary: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --bg-dark: #0A0D18;
-  --bg-app: #F4F7FD;
-  --bg-card: #FFFFFF;
-  --bg-subtle: #F8FAFC;
-  --bg-blue-light: #EEF4FF;
-
-  --color-primary: #0B4BD6;
-  --color-primary-hover: #083CB0;
-  --color-primary-light: #EBF2FF;
+  --font-primary: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
-  --text-main: #0C1938;
+  /* Backgrounds */
+  --bg-app: #F4F8F6;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F0FDF4;
+  --bg-card-elevated: #FFFFFF;
+  --bg-subtle: #EEF7F2;
+  --bg-subtle-alpha: rgba(238, 247, 242, 0.75);
+  --bg-blue-light: #ECFDF5;
+  --bg-glass: rgba(255, 255, 255, 0.9);
+  --bg-input: #FFFFFF;
+  
+  /* Primary Brand: Emerald & Mint */
+  --color-primary: #059669;
+  --color-primary-hover: #047857;
+  --color-primary-light: #ECFDF5;
+  --color-primary-glow: rgba(5, 150, 105, 0.2);
+  --color-primary-alpha: rgba(5, 150, 105, 0.08);
+
+  /* Typography */
+  --text-main: #0F172A;
+  --text-secondary: #334155;
   --text-muted: #5F6D8E;
   --text-light: #94A3B8;
+  --text-inverse: #FFFFFF;
 
+  /* Status Tokens */
   --color-mint-bg: #D1FAE5;
   --color-mint-text: #059669;
+  --color-mint-border: #A7F3D0;
 
-  --color-equity: #0B4BD6;
-  --color-debt: #38BDF8;
-  --color-liquid: #9A6A15;
+  --color-danger-bg: #FEE2E2;
+  --color-danger-text: #DC2626;
+  --color-danger-border: #FECACA;
 
-  --border-card: #E5EDF9;
-  --border-outer: rgba(120, 140, 245, 0.4);
+  --color-warning-bg: #FEF3C7;
+  --color-warning-text: #D97706;
+  --color-warning-border: #FDE68A;
 
-  --shadow-sm: 0 2px 8px rgba(12, 25, 56, 0.04);
-  --shadow-md: 0 4px 20px rgba(12, 25, 56, 0.06);
-  --shadow-glow: 0 0 25px rgba(11, 75, 214, 0.15);
+  --color-purple-bg: #EDE9FE;
+  --color-purple-text: #7C3AED;
+  --color-purple-border: #DDD6FE;
+
+  --color-info-bg: #ECFDF5;
+  --color-info-text: #059669;
+  --color-info-border: #A7F3D0;
+
+  /* Asset Allocation Colors */
+  --color-equity: #059669;
+  --color-debt: #0D9488;
+  --color-liquid: #D97706;
+  --color-gold: #EAB308;
+  --color-crypto: #8B5CF6;
+
+  /* Borders & Dividers */
+  --border-card: #E2E8F0;
+  --border-subtle: #EDF2F7;
+  --border-hover: #CBD5E1;
+  --border-accent: rgba(5, 150, 105, 0.3);
+  --border-outer: rgba(16, 185, 129, 0.25);
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 6px 20px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 14px 36px rgba(15, 23, 42, 0.08);
+  --shadow-glow: 0 0 25px rgba(5, 150, 105, 0.14);
+
+  /* Range Sliders */
+  --slider-track: #E2E8F0;
+  --slider-thumb-border: #FFFFFF;
+
+  /* Scrollbar */
+  --scrollbar-thumb: #CBD5E1;
+  --scrollbar-thumb-hover: #94A3B8;
+
+  /* Modal Backdrop */
+  --modal-backdrop: rgba(15, 23, 42, 0.55);
 }
 
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  background-color: var(--bg-app);
+  color: var(--text-main);
 }
 
 body {
@@ -44,6 +101,7 @@ body {
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button {
@@ -53,15 +111,40 @@ button {
   outline: none;
 }
 
+input, select, textarea {
+  font-family: inherit;
+}
+
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: var(--scrollbar-thumb);
   border-radius: 99px;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+}
+
+/* Glassmorphic Utility */
+.enterprise-glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-card);
+}
+
+/* Pulse animation */
+@keyframes enterprise-glow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
 }
