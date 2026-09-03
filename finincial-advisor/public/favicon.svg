@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#064E3B" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCD34D" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Squircle Container -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bgGrad)" stroke="#6EE7B7" stroke-width="1.2" stroke-opacity="0.7"/>
+
+  <!-- Bank Icon Group -->
+  <g filter="url(#shadow)">
+    <!-- Roof Pediment -->
+    <polygon points="32,13 10,24 54,24" fill="#FFFFFF"/>
+    
+    <!-- Central Banking Gold Coin -->
+    <circle cx="32" cy="20" r="3" fill="url(#goldGrad)" stroke="#FFFFFF" stroke-width="0.5"/>
+    <path d="M32 18.5V21.5M30.8 20H33.2" stroke="#FFFFFF" stroke-width="0.6" stroke-linecap="round"/>
+
+    <!-- Frieze / Horizontal Entablature -->
+    <rect x="9" y="25" width="46" height="3" rx="1" fill="#FFFFFF"/>
+
+    <!-- 3 Stately Columns / Pillars -->
+    <!-- Column 1 -->
+    <rect x="13" y="29" width="6" height="15" rx="1.2" fill="#FFFFFF"/>
+    <rect x="14.5" y="31" width="3" height="11" rx="0.8" fill="#D1FAE5"/>
+
+    <!-- Column 2 -->
+    <rect x="29" y="29" width="6" height="15" rx="1.2" fill="#FFFFFF"/>
+    <rect x="30.5" y="31" width="3" height="11" rx="0.8" fill="#D1FAE5"/>
+
+    <!-- Column 3 -->
+    <rect x="45" y="29" width="6" height="15" rx="1.2" fill="#FFFFFF"/>
+    <rect x="46.5" y="31" width="3" height="11" rx="0.8" fill="#D1FAE5"/>
+
+    <!-- Foundation Steps (2 Tiers) -->
+    <rect x="9" y="45" width="46" height="3" rx="1" fill="#FFFFFF"/>
+    <rect x="7" y="49" width="50" height="3.5" rx="1.2" fill="#FFFFFF"/>
+  </g>
+</svg>
