@@ -112,32 +112,37 @@
               <div class="slider-group">
                 <div class="slider-label-row">
                   <span class="label">Monthly Expenses</span>
-                  <span class="value">₹{{ monthlyExpenses | number }}</span>
+                  <div class="param-input-wrap">
+                    <span class="currency-prefix">₹</span>
+                    <input 
+                      type="number" 
+                      class="param-number-input" 
+                      [(ngModel)]="monthlyExpenses" 
+                      min="0" 
+                      step="1000"
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="250000" 
-                  step="2500" 
-                  [(ngModel)]="monthlyExpenses" 
-                  class="custom-range" 
-                />
               </div>
 
               <!-- Job Loss Duration -->
               <div class="slider-group highlighted-param">
                 <div class="slider-label-row">
                   <span class="label">Job Loss Duration</span>
-                  <span class="value">{{ jobLossMonths }} Months</span>
+                  <div class="param-input-wrap">
+                    <input 
+                      type="number" 
+                      class="param-number-input duration-input" 
+                      [(ngModel)]="jobLossMonths" 
+                      min="0" 
+                      max="120" 
+                      step="1"
+                      placeholder="0"
+                    />
+                    <span class="unit-suffix">Months</span>
+                  </div>
                 </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="24" 
-                  step="1" 
-                  [(ngModel)]="jobLossMonths" 
-                  class="custom-range range-amber" 
-                />
               </div>
             }
 
@@ -147,48 +152,54 @@
               <div class="slider-group highlighted-param">
                 <div class="slider-label-row">
                   <span class="label">Medical Bill Shock</span>
-                  <span class="value">₹{{ medicalBill | number }}</span>
+                  <div class="param-input-wrap">
+                    <span class="currency-prefix">₹</span>
+                    <input 
+                      type="number" 
+                      class="param-number-input" 
+                      [(ngModel)]="medicalBill" 
+                      min="0" 
+                      step="10000"
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="2000000" 
-                  step="25000" 
-                  [(ngModel)]="medicalBill" 
-                  class="custom-range range-rose" 
-                />
               </div>
 
               <!-- Health Insurance Cover -->
               <div class="slider-group highlighted-param">
                 <div class="slider-label-row">
                   <span class="label">Health Insurance Cover</span>
-                  <span class="value">₹{{ insurance | number }}</span>
+                  <div class="param-input-wrap">
+                    <span class="currency-prefix">₹</span>
+                    <input 
+                      type="number" 
+                      class="param-number-input" 
+                      [(ngModel)]="insurance" 
+                      min="0" 
+                      step="25000"
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="3000000" 
-                  step="50000" 
-                  [(ngModel)]="insurance" 
-                  class="custom-range range-green" 
-                />
               </div>
 
               <!-- Monthly Expenses -->
               <div class="slider-group">
                 <div class="slider-label-row">
                   <span class="label">Monthly Expenses</span>
-                  <span class="value">₹{{ monthlyExpenses | number }}</span>
+                  <div class="param-input-wrap">
+                    <span class="currency-prefix">₹</span>
+                    <input 
+                      type="number" 
+                      class="param-number-input" 
+                      [(ngModel)]="monthlyExpenses" 
+                      min="0" 
+                      step="1000"
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="250000" 
-                  step="2500" 
-                  [(ngModel)]="monthlyExpenses" 
-                  class="custom-range" 
-                />
               </div>
             }
 
@@ -201,80 +212,90 @@
             <div class="slider-group">
               <div class="slider-label-row">
                 <span class="label">Savings Bank Account Balance</span>
-                <span class="value">₹{{ savingsBankBalance | number }}</span>
+                <div class="param-input-wrap">
+                  <span class="currency-prefix">₹</span>
+                  <input 
+                    type="number" 
+                    class="param-number-input" 
+                    [(ngModel)]="savingsBankBalance" 
+                    min="0" 
+                    step="5000"
+                    placeholder="0"
+                  />
+                </div>
               </div>
-              <input 
-                type="range" 
-                min="0" 
-                max="1000000" 
-                step="10000" 
-                [(ngModel)]="savingsBankBalance" 
-                class="custom-range range-blue" 
-              />
             </div>
 
             <!-- Liquid Fund -->
             <div class="slider-group">
               <div class="slider-label-row">
                 <span class="label">Liquid Fund (Mutual Funds)</span>
-                <span class="value">₹{{ liquidFund | number }}</span>
+                <div class="param-input-wrap">
+                  <span class="currency-prefix">₹</span>
+                  <input 
+                    type="number" 
+                    class="param-number-input" 
+                    [(ngModel)]="liquidFund" 
+                    min="0" 
+                    step="10000"
+                    placeholder="0"
+                  />
+                </div>
               </div>
-              <input 
-                type="range" 
-                min="0" 
-                max="1500000" 
-                step="25000" 
-                [(ngModel)]="liquidFund" 
-                class="custom-range range-green" 
-              />
             </div>
 
             <!-- FD Investment -->
             <div class="slider-group">
               <div class="slider-label-row">
                 <span class="label">FD Investment (Fixed Deposit)</span>
-                <span class="value">₹{{ fdInvestment | number }}</span>
+                <div class="param-input-wrap">
+                  <span class="currency-prefix">₹</span>
+                  <input 
+                    type="number" 
+                    class="param-number-input" 
+                    [(ngModel)]="fdInvestment" 
+                    min="0" 
+                    step="10000"
+                    placeholder="0"
+                  />
+                </div>
               </div>
-              <input 
-                type="range" 
-                min="0" 
-                max="2500000" 
-                step="25000" 
-                [(ngModel)]="fdInvestment" 
-                class="custom-range range-amber" 
-              />
             </div>
 
             <!-- Gold Investment -->
             <div class="slider-group">
               <div class="slider-label-row">
                 <span class="label">Gold Investment</span>
-                <span class="value">₹{{ goldInvestment | number }}</span>
+                <div class="param-input-wrap">
+                  <span class="currency-prefix">₹</span>
+                  <input 
+                    type="number" 
+                    class="param-number-input" 
+                    [(ngModel)]="goldInvestment" 
+                    min="0" 
+                    step="10000"
+                    placeholder="0"
+                  />
+                </div>
               </div>
-              <input 
-                type="range" 
-                min="0" 
-                max="2000000" 
-                step="25000" 
-                [(ngModel)]="goldInvestment" 
-                class="custom-range range-yellow" 
-              />
             </div>
 
             <!-- Market Investment -->
             <div class="slider-group">
               <div class="slider-label-row">
                 <span class="label">Market Investment (Equity)</span>
-                <span class="value">₹{{ marketInvestment | number }}</span>
+                <div class="param-input-wrap">
+                  <span class="currency-prefix">₹</span>
+                  <input 
+                    type="number" 
+                    class="param-number-input" 
+                    [(ngModel)]="marketInvestment" 
+                    min="0" 
+                    step="10000"
+                    placeholder="0"
+                  />
+                </div>
               </div>
-              <input 
-                type="range" 
-                min="0" 
-                max="4000000" 
-                step="50000" 
-                [(ngModel)]="marketInvestment" 
-                class="custom-range range-purple" 
-              />
             </div>
           </div>
         </div>

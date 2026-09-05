@@ -24,7 +24,6 @@ export class SidebarComponent {
     { id: 'dashboard', label: 'Dashboard', icon: 'grid', route: '/dashboard' },
     { id: 'advisor', label: 'AI Advisor', icon: 'bot', route: '/ai-advisor' },
     { id: 'goals', label: 'Goals', icon: 'flag', route: '/goals' },
-    { id: 'insights', label: 'Insights', icon: 'bulb', route: '/insights' },
     { id: 'simulator', label: 'Simulator', icon: 'trending', route: '/simulator' }
   ];
 

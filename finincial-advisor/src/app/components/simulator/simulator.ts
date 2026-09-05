@@ -74,15 +74,15 @@ export class SimulatorComponent {
   }
 
   get immediateLiquidCash(): number {
-    return this.savingsBankBalance + this.liquidFund;
+    return (Number(this.savingsBankBalance) || 0) + (Number(this.liquidFund) || 0);
   }
 
   get totalEmergencyPool(): number {
-    return this.immediateLiquidCash + this.fdInvestment;
+    return this.immediateLiquidCash + (Number(this.fdInvestment) || 0);
   }
 
   get totalInvestedAssets(): number {
-    return this.fdInvestment + this.goldInvestment + this.marketInvestment;
+    return (Number(this.fdInvestment) || 0) + (Number(this.goldInvestment) || 0) + (Number(this.marketInvestment) || 0);
   }
 
   get totalNetWorth(): number {
@@ -90,16 +90,17 @@ export class SimulatorComponent {
   }
 
   get totalReservesCoverageMonths(): number {
-    if (this.monthlyExpenses <= 0) return 0;
-    return parseFloat((this.totalEmergencyPool / this.monthlyExpenses).toFixed(1));
+    const expenses = Number(this.monthlyExpenses) || 0;
+    if (expenses <= 0) return 0;
+    return parseFloat((this.totalEmergencyPool / expenses).toFixed(1));
   }
 
   get scenarioCost(): number {
     if (this.selectedScenario.id === 'job_loss') {
-      return this.monthlyExpenses * this.jobLossMonths;
+      return (Number(this.monthlyExpenses) || 0) * (Number(this.jobLossMonths) || 0);
     }
     if (this.selectedScenario.id === 'medical_emergency') {
-      return Math.max(0, this.medicalBill - this.insurance);
+      return Math.max(0, (Number(this.medicalBill) || 0) - (Number(this.insurance) || 0));
     }
     return 0;
   }
@@ -129,16 +130,16 @@ export class SimulatorComponent {
 
   getCurrentParams(): any {
     return {
-      monthlyExpenses: this.monthlyExpenses,
-      jobLossMonths: this.jobLossMonths,
-      medicalBill: this.medicalBill,
-      insurance: this.insurance,
-      bigExpense: this.bigExpense,
-      savingsBankBalance: this.savingsBankBalance,
-      liquidFund: this.liquidFund,
-      fdInvestment: this.fdInvestment,
-      goldInvestment: this.goldInvestment,
-      marketInvestment: this.marketInvestment,
+      monthlyExpenses: Number(this.monthlyExpenses) || 0,
+      jobLossMonths: Number(this.jobLossMonths) || 0,
+      medicalBill: Number(this.medicalBill) || 0,
+      insurance: Number(this.insurance) || 0,
+      bigExpense: Number(this.bigExpense) || 0,
+      savingsBankBalance: Number(this.savingsBankBalance) || 0,
+      liquidFund: Number(this.liquidFund) || 0,
+      fdInvestment: Number(this.fdInvestment) || 0,
+      goldInvestment: Number(this.goldInvestment) || 0,
+      marketInvestment: Number(this.marketInvestment) || 0,
       scenarioId: this.selectedScenario.id
     };
   }
@@ -148,20 +149,30 @@ export class SimulatorComponent {
    */
   buildPrompt(): string {
     const scenarioKey = this.selectedScenario.id === 'medical_emergency' ? 'medical_bill' : this.selectedScenario.id;
+    const exp = Number(this.monthlyExpenses) || 0;
+    const months = Number(this.jobLossMonths) || 0;
+    const med = Number(this.medicalBill) || 0;
+    const ins = Number(this.insurance) || 0;
+    const big = Number(this.bigExpense) || 0;
+    const sav = Number(this.savingsBankBalance) || 0;
+    const liq = Number(this.liquidFund) || 0;
+    const fd = Number(this.fdInvestment) || 0;
+    const gold = Number(this.goldInvestment) || 0;
+    const mkt = Number(this.marketInvestment) || 0;
 
     return `I would like to check my financial preparedness for the following situation:
 
 Scenario: ${scenarioKey}
-• Monthly Expenses: ₹${this.monthlyExpenses.toLocaleString('en-IN')}
-• Job Loss Months: ${this.jobLossMonths > 0 ? this.jobLossMonths : (this.selectedScenario.id === 'job_loss' ? 6 : 0)}
-• Medical Bill: ₹${this.medicalBill.toLocaleString('en-IN')}
-• Insurance: ₹${this.insurance.toLocaleString('en-IN')}
-• Big Expense: ₹${this.bigExpense.toLocaleString('en-IN')}
-• Savings Bank Account Balance: ₹${this.savingsBankBalance.toLocaleString('en-IN')}
-• Liquid Fund: ₹${this.liquidFund.toLocaleString('en-IN')}
-• FD Investment: ₹${this.fdInvestment.toLocaleString('en-IN')}
-• Gold Investment: ₹${this.goldInvestment.toLocaleString('en-IN')}
-• Market Investment: ₹${this.marketInvestment.toLocaleString('en-IN')}
+• Monthly Expenses: ₹${exp.toLocaleString('en-IN')}
+• Job Loss Months: ${months > 0 ? months : (this.selectedScenario.id === 'job_loss' ? 6 : 0)}
+• Medical Bill: ₹${med.toLocaleString('en-IN')}
+• Insurance: ₹${ins.toLocaleString('en-IN')}
+• Big Expense: ₹${big.toLocaleString('en-IN')}
+• Savings Bank Account Balance: ₹${sav.toLocaleString('en-IN')}
+• Liquid Fund: ₹${liq.toLocaleString('en-IN')}
+• FD Investment: ₹${fd.toLocaleString('en-IN')}
+• Gold Investment: ₹${gold.toLocaleString('en-IN')}
+• Market Investment: ₹${mkt.toLocaleString('en-IN')}
 
 Please evaluate my preparedness score, required amount, accessible savings, safety backup runway in months, potential shortfall, and recommendation using the Financial Preparedness Advisor.`;
   }
