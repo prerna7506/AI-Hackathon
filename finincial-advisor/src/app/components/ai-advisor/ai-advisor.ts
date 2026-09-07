@@ -449,6 +449,10 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
               const pa = parsed.pipeLineAgents[i];
               if (pa?.output && typeof pa.output === 'string') return pa.output;
               if (pa?.raw && typeof pa.raw === 'string') return pa.raw;
+              if (pa?.agent?.output && typeof pa.agent.output === 'string') return pa.agent.output;
+              if (pa?.agent?.raw && typeof pa.agent.raw === 'string') return pa.agent.raw;
+              if (pa?.task?.output && typeof pa.task.output === 'string') return pa.task.output;
+              if (pa?.task?.raw && typeof pa.task.raw === 'string') return pa.task.raw;
             }
           }
         } catch {
