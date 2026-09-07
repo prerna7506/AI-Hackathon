@@ -37,7 +37,7 @@ export class WorkflowService {
   private readonly baseUrl = 'https://int-ai.aava.ai/workflows/workflow-executions';
 
   // Configuration
-  private readonly defaultPipelineId = '21426';
+  private readonly defaultPipelineId = '22014';
   private readonly defaultUser = 'ayan.gorain@ascendion.com';
   private readonly defaultPriority = '1';
   private readonly defaultRealmId = '1';
@@ -65,7 +65,7 @@ export class WorkflowService {
    */
   submitWorkflow(
     userInputText: string,
-    inputKey: string = '{{input_string_true}}',
+    inputKey: string = '{{input_string_true_input}}',
     options?: { pipelineId?: string; user?: string; priority?: string }
   ): Observable<WorkflowSubmitResponse> {
     const formData = new FormData();
@@ -267,7 +267,7 @@ export class WorkflowService {
    */
   runWorkflowAndAwaitResult(
     userInputText: string,
-    inputKey: string = '{{input_string_true}}',
+    inputKey: string = '{{input_string_true_input}}',
     options?: { pipelineId?: string; user?: string; priority?: string }
   ): Observable<WorkflowResultResponse> {
     console.log('Starting workflow for:', userInputText);

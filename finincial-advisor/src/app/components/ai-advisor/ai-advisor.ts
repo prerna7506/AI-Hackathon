@@ -136,7 +136,7 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
       id: id,
       title: 'New Chat',
       subtext: 'Just started',
-      pipelineId: pipelineId || '21426',
+      pipelineId: pipelineId || '22014',
       prompts: [
         'Can I afford a car for ₹8 Lakh?',
         'Can I buy an iPhone for ₹1.5 Lakh?',
@@ -360,10 +360,10 @@ export class AiAdvisorComponent implements OnInit, AfterViewChecked, OnDestroy {
     // Build conversational context so the AI remembers previous items
     const contextualPrompt = this.buildFullConversationContext(topic, text);
 
-    const activePipeline = topic.pipelineId || overridePipelineId || '21426';
+    const activePipeline = topic.pipelineId || overridePipelineId || '22014';
 
     // Submit the job with full conversational context, targeting the requested pipeline
-    this.aiService.runWorkflowAndAwaitResult(contextualPrompt, '{{input_string_true}}', { pipelineId: activePipeline }).subscribe({
+    this.aiService.runWorkflowAndAwaitResult(contextualPrompt, '{{input_string_true_input}}', { pipelineId: activePipeline }).subscribe({
       next: (response) => {
         const replyText = this.extractReplyText(response);
         if (replyText) {
