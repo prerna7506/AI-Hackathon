@@ -10,7 +10,7 @@
   </div>
 
   <div class="allocation-list">
-    @for (item of allocations; track item.name) {
+    @for (item of allocations(); track item.name) {
       <div class="allocation-item">
         <div class="item-meta">
           <span class="item-name">

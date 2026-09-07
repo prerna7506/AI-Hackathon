@@ -105,7 +105,6 @@ export class SimulatorWorkflowService {
       .post<WorkflowSubmitResponse>(this.baseUrl, formData, { headers })
       .pipe(
         switchMap(response => {
-          console.log('[SimulatorWorkflow] Submitted to Pipeline 21759. Execution ID:', response.data.workflowExecutionId);
           return of(response);
         })
       );

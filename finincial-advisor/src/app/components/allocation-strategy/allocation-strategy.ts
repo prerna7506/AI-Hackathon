@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { GoalsService } from '../../services/goals.service';
 
 interface AllocationItem {
   name: string;
@@ -16,9 +17,23 @@ interface AllocationItem {
   styleUrl: './allocation-strategy.scss'
 })
 export class AllocationStrategyComponent {
-  allocations: AllocationItem[] = [
-    { name: 'Equity', subtitle: '(High Growth)', percentage: 60, color: 'var(--color-equity)' },
-    { name: 'Debt', subtitle: '(Stability)', percentage: 30, color: 'var(--color-debt)' },
-    { name: 'Liquid', subtitle: '(Emergency)', percentage: 10, color: 'var(--color-liquid)' }
-  ];
+  goalsService = inject(GoalsService);
+
+  primaryGoal = computed(() => {
+    const goals = this.goalsService.goals();
+    return goals.find(g => g.isPrimary) || goals[0] || null;
+  });
+
+  allocations = computed<AllocationItem[]>(() => {
+    const goal = this.primaryGoal();
+    const equity = goal?.equityAllocation ?? 50;
+    const debt = goal?.debtAllocation ?? 40;
+    const liquid = goal?.liquidAllocation ?? 10;
+
+    return [
+      { name: 'Equity', subtitle: '(High Growth)', percentage: equity, color: 'var(--color-equity)' },
+      { name: 'Debt', subtitle: '(Stability)', percentage: debt, color: 'var(--color-debt)' },
+      { name: 'Liquid', subtitle: '(Emergency)', percentage: liquid, color: 'var(--color-liquid)' }
+    ];
+  });
 }

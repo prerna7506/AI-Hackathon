@@ -87,7 +87,6 @@ export class WorkflowService {
       .post<WorkflowSubmitResponse>(this.baseUrl, formData, { headers })
       .pipe(
         switchMap(response => {
-          console.log('[Workflow] Workflow submitted:', response.data.workflowExecutionId);
           return of(response);
         })
       );
@@ -105,8 +104,6 @@ export class WorkflowService {
    * GET → {"status": "COMPLETED", "data": {...}} → subscriber.next(response) + complete
    */
   pollForResult(executionId: string): Observable<WorkflowResultResponse> {
-    console.log(`Starting to poll for execution: ${executionId}`);
-
     return new Observable<WorkflowResultResponse>((subscriber) => {
       let pollAttempts = 0;
       let timeoutId: any = null;
@@ -116,7 +113,6 @@ export class WorkflowService {
         if (isCancelled) return;
 
         pollAttempts++;
-        console.log(`[Poll #${pollAttempts}/${this.maxPollAttempts}] Fetching result for ${executionId}...`);
 
         this.getWorkflowResult(executionId).subscribe({
           next: (response) => {
@@ -130,8 +126,6 @@ export class WorkflowService {
               response?.data?.['workflowStatus'] ??
               ''
             ).toString().toUpperCase().trim();
-
-            console.log(`[Poll #${pollAttempts}] data.status: "${innerStatus}", wrapper: "${response?.status}"`);
 
             const isIntermediate = [
               'QUEUED',
@@ -147,14 +141,12 @@ export class WorkflowService {
 
             // 1. If still in progress and no final result -> keep polling silently (no UI emission)
             if (isIntermediate && !hasResult) {
-              console.log(`[SILENT POLL] Status is "${innerStatus}" - continuing to poll...`);
               timeoutId = setTimeout(poll, this.pollIntervalMs);
               return;
             }
 
             // 2. Success completion -> emit to UI and complete
             if (['SUCCESS', 'COMPLETED', 'FINISHED', 'DONE'].includes(innerStatus) || hasResult) {
-              console.log('[EMIT] Workflow COMPLETED! Emitting result to UI:', response);
               subscriber.next(response);
               subscriber.complete();
               return;
@@ -176,7 +168,6 @@ export class WorkflowService {
             }
 
             // 5. Default: keep polling
-            console.log(`Unknown status "${innerStatus}" - treating as in-progress...`);
             timeoutId = setTimeout(poll, this.pollIntervalMs);
           },
           error: (err) => {
@@ -184,7 +175,6 @@ export class WorkflowService {
             console.warn(`[Poll #${pollAttempts}] Request error:`, err);
 
             if (pollAttempts < this.maxPollAttempts) {
-              console.log(`Retrying poll in ${this.pollIntervalMs}ms...`);
               timeoutId = setTimeout(poll, this.pollIntervalMs);
             } else {
               subscriber.error(err);
@@ -257,21 +247,12 @@ export class WorkflowService {
 
   /**
    * Full workflow: Submit → Poll → Get Result
-   * 
-   * Usage:
-   * this.workflowService.runWorkflowAndAwaitResult('Car')
-   *   .subscribe(
-   *     (result) => console.log('Result:', result),
-   *     (error) => console.error('Error:', error)
-   *   );
    */
   runWorkflowAndAwaitResult(
     userInputText: string,
     inputKey: string = '{{input_string_true_input}}',
     options?: { pipelineId?: string; user?: string; priority?: string }
   ): Observable<WorkflowResultResponse> {
-    console.log('Starting workflow for:', userInputText);
-
     return this.submitWorkflow(userInputText, inputKey, options).pipe(
       // After submit, get the executionId and start polling
       switchMap((submitResponse) => {
@@ -285,6 +266,78 @@ export class WorkflowService {
         return this.pollForResult(executionId);
       })
     );
+  }
+
+  /**
+   * Universal helper to extract formatted markdown / text from workflow responses
+   */
+  extractReplyText(response: any): string {
+    if (!response) return '';
+    if (typeof response === 'string') return response;
+
+    const data = response.data ?? response;
+
+    // Check data.result object first (final completed payload)
+    if (data.result) {
+      if (typeof data.result === 'string') return data.result;
+
+      if (typeof data.result.output === 'string' && data.result.output.trim().length > 0) {
+        return data.result.output.trim();
+      }
+
+      // Check tasksOutputs array
+      if (Array.isArray(data.result.tasksOutputs) && data.result.tasksOutputs.length > 0) {
+        for (let i = data.result.tasksOutputs.length - 1; i >= 0; i--) {
+          const task = data.result.tasksOutputs[i];
+          if (task?.output && typeof task.output === 'string' && task.output.trim().length > 0) {
+            return task.output.trim();
+          }
+          if (task?.raw && typeof task.raw === 'string' && task.raw.trim().length > 0) {
+            return task.raw.trim();
+          }
+        }
+      }
+
+      // Check pipeLineAgents array
+      if (Array.isArray(data.result.pipeLineAgents) && data.result.pipeLineAgents.length > 0) {
+        for (let i = data.result.pipeLineAgents.length - 1; i >= 0; i--) {
+          const pa = data.result.pipeLineAgents[i];
+          if (pa?.output && typeof pa.output === 'string') return pa.output.trim();
+          if (pa?.raw && typeof pa.raw === 'string') return pa.raw.trim();
+        }
+      }
+
+      // Check data.result.response string
+      if (typeof data.result.response === 'string') {
+        try {
+          const parsed = JSON.parse(data.result.response);
+          if (typeof parsed === 'string') return parsed;
+          if (parsed?.output && typeof parsed.output === 'string') return parsed.output;
+          if (parsed?.result && typeof parsed.result === 'string') return parsed.result;
+          if (parsed?.raw && typeof parsed.raw === 'string') return parsed.raw;
+          if (Array.isArray(parsed?.tasksOutputs)) {
+            for (let i = parsed.tasksOutputs.length - 1; i >= 0; i--) {
+              const task = parsed.tasksOutputs[i];
+              if (task?.output) return task.output;
+              if (task?.raw) return task.raw;
+            }
+          }
+        } catch {
+          return data.result.response;
+        }
+      }
+
+      if (typeof data.result.text === 'string') return data.result.text;
+      if (typeof data.result.message === 'string') return data.result.message;
+      if (typeof data.result.content === 'string') return data.result.content;
+    }
+
+    if (typeof data.output === 'string' && data.output.trim().length > 0) return data.output.trim();
+    if (typeof data.response === 'string' && data.response.trim().length > 0) return data.response.trim();
+    if (typeof data.message === 'string' && data.status === 'COMPLETED') return data.message;
+    if (typeof data.answer === 'string' && data.answer) return data.answer;
+
+    return typeof data === 'string' ? data : JSON.stringify(data, null, 2);
   }
 
   private handleError(error: HttpErrorResponse) {

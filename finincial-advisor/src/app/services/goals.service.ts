@@ -1,6 +1,8 @@
 import { Injectable, signal, inject, effect, untracked } from '@angular/core';
+import { Observable, map } from 'rxjs';
 import { AuthService } from './auth.service';
 import { FirestoreService, GoalItem } from './firestore.service';
+import { WorkflowService } from './ai-advisor.service';
 
 export type { GoalItem };
 
@@ -15,7 +17,10 @@ export const DEFAULT_GOALS: GoalItem[] = [
     icon: 'house',
     status: 'On Track',
     isPrimary: true,
-    color: 'var(--color-primary)'
+    color: 'var(--color-primary)',
+    equityAllocation: 50,
+    debtAllocation: 40,
+    liquidAllocation: 10
   },
   {
     id: 'retirement',
@@ -27,7 +32,10 @@ export const DEFAULT_GOALS: GoalItem[] = [
     icon: 'retirement',
     status: 'On Track',
     isPrimary: false,
-    color: '#00A389'
+    color: '#00A389',
+    equityAllocation: 70,
+    debtAllocation: 25,
+    liquidAllocation: 5
   },
   {
     id: 'emergency',
@@ -39,7 +47,10 @@ export const DEFAULT_GOALS: GoalItem[] = [
     icon: 'shield',
     status: 'On Track',
     isPrimary: false,
-    color: 'var(--color-liquid)'
+    color: 'var(--color-liquid)',
+    equityAllocation: 10,
+    debtAllocation: 30,
+    liquidAllocation: 60
   }
 ];
 
@@ -64,6 +75,7 @@ function getInitialCachedGoals(): GoalItem[] {
 export class GoalsService {
   private authService = inject(AuthService);
   private firestoreService = inject(FirestoreService);
+  private workflowService = inject(WorkflowService);
 
   isModalOpen = signal(false);
   isRecommendationModalOpen = signal(false);
@@ -101,6 +113,76 @@ export class GoalsService {
   }
 
   /**
+   * Builds the formatted goal information string for Pipeline 22027
+   * Payload template format matching user specification:
+   * Goal Name: Buy a Car
+   * Target Amount: ₹10,00,000
+   * Timeline: 3 years
+   * Target Year: 2029
+   * Current Saved Amount: ₹2,00,000
+   * Current Progress: 20%
+   * 
+   * Current Investment Allocation:
+   * Equity: 50%
+   * Debt: 40%
+   * Liquid: 10%
+   * 
+   * Recommended Monthly Savings Increase: ₹5,000
+   */
+  buildGoalInformationString(
+    goal: GoalItem,
+    boostAmount: number = 5000,
+    alloc: { equity: number; debt: number; liquid: number } = { equity: 50, debt: 40, liquid: 10 }
+  ): string {
+    const currentYear = new Date().getFullYear();
+    const timeline = goal.timelineYears || 3;
+    const targetYear = goal.targetYear || (currentYear + timeline);
+    const progress = goal.targetAmount > 0
+      ? Math.round((goal.currentAmount / goal.targetAmount) * 100)
+      : 0;
+
+    return `Goal Name: ${goal.title}
+Target Amount: ₹${goal.targetAmount.toLocaleString('en-IN')}
+Timeline: ${timeline} years
+Target Year: ${targetYear}
+Current Saved Amount: ₹${goal.currentAmount.toLocaleString('en-IN')}
+Current Progress: ${progress}%
+
+Current Investment Allocation:
+Equity: ${alloc.equity}%
+Debt: ${alloc.debt}%
+Liquid: ${alloc.liquid}%
+
+Recommended Monthly Savings Increase: ₹${boostAmount.toLocaleString('en-IN')}`;
+  }
+
+  /**
+   * Executes Aava Workflow Pipeline 22027 with input key '{{goal_information_string_true}}'
+   */
+  runGoalRecommendationWorkflow(
+    goal: GoalItem,
+    boostAmount: number = 5000,
+    strategy: string = 'balanced',
+    alloc: { equity: number; debt: number; liquid: number } = { equity: 50, debt: 40, liquid: 10 }
+  ): Observable<{ replyText: string; rawResponse: any }> {
+    const formattedPayload = this.buildGoalInformationString(goal, boostAmount, alloc);
+
+    return this.workflowService
+      .runWorkflowAndAwaitResult(formattedPayload, '{{goal_information_string_true}}', {
+        pipelineId: '22027'
+      })
+      .pipe(
+        map(response => {
+          const replyText = this.workflowService.extractReplyText(response);
+          return {
+            replyText: replyText || 'Goal recommendation generated successfully.',
+            rawResponse: response
+          };
+        })
+      );
+  }
+
+  /**
    * Load user goals from Firestore
    */
   async loadGoalsFromFirestore(uid: string): Promise<void> {
@@ -113,7 +195,6 @@ export class GoalsService {
         this.saveToLocalCache(userGoals);
       } else {
         // First-time user: seed default starter goals into Firestore
-        console.log('Seeding initial starter goals for new user into Firestore...');
         await this.firestoreService.saveAllGoals(uid, DEFAULT_GOALS);
         this.goals.set(DEFAULT_GOALS);
         this.saveToLocalCache(DEFAULT_GOALS);
@@ -246,7 +327,13 @@ export class GoalsService {
   /**
    * Apply AI recommendation boost and persist to Firestore
    */
-  async applyRecommendation(goalId: string, boostAmount: number, strategy: string): Promise<void> {
+  async applyRecommendation(
+    goalId: string,
+    boostAmount: number,
+    strategy: string,
+    recommendationResponse?: string,
+    alloc?: { equity: number; debt: number; liquid: number }
+  ): Promise<void> {
     let targetGoal: GoalItem | null = null;
 
     const updatedList = this.goals().map(g => {
@@ -256,7 +343,11 @@ export class GoalsService {
           status: 'Optimized',
           currentAmount: g.currentAmount + boostAmount,
           monthlyBoost: boostAmount,
-          strategy: strategy
+          strategy: strategy,
+          recommendationResponse: recommendationResponse ?? g.recommendationResponse,
+          equityAllocation: alloc?.equity ?? g.equityAllocation,
+          debtAllocation: alloc?.debt ?? g.debtAllocation,
+          liquidAllocation: alloc?.liquid ?? g.liquidAllocation
         };
         targetGoal = updated;
         return updated;
@@ -267,14 +358,13 @@ export class GoalsService {
     this.goals.set(updatedList);
     this.saveToLocalCache(updatedList);
     this.recommendationApplied.set(true);
-    this.closeRecommendationModal();
 
     const uid = this.authService.currentUserId();
     if (uid && this.authService.isLoggedIn() && targetGoal) {
       this.isSyncing.set(true);
       try {
         await this.firestoreService.saveGoal(uid, targetGoal);
-        this.showToast(`Recommendation applied & saved to Firebase! (+₹${boostAmount.toLocaleString('en-IN')}/mo)`);
+        this.showToast(`AI Recommendation saved to Firebase! (+₹${boostAmount.toLocaleString('en-IN')}/mo)`);
       } catch (error) {
         console.error('Error updating recommendation in Firestore:', error);
         this.showToast(`Recommendation applied! Added ₹${boostAmount.toLocaleString('en-IN')}/mo optimization.`);
@@ -282,7 +372,7 @@ export class GoalsService {
         this.isSyncing.set(false);
       }
     } else {
-      this.showToast(`Recommendation applied! Added ₹${boostAmount.toLocaleString('en-IN')}/mo optimization to your plan.`);
+      this.showToast(`Recommendation applied! Added ₹${boostAmount.toLocaleString('en-IN')}/mo optimization.`);
     }
   }
 }

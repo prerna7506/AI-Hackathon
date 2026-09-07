@@ -18,8 +18,15 @@ export class MarkdownPipe implements PipeTransform {
 
   transform(value: string | null | undefined): SafeHtml {
     if (!value) return '';
+    let text = value;
 
-    let text = String(value);
+    // 0. Handle Goal Recommendation Reports from Pipeline 22027
+    if (text.includes('GOAL RECOMMENDATION') || text.includes('GOAL AI') || text.includes('INVESTMENT ALLOCATION')) {
+      const goalHtml = this.parseGoalRecommendation(text);
+      if (goalHtml) {
+        return this.sanitizer.bypassSecurityTrustHtml(goalHtml);
+      }
+    }
 
     // 1. Transform Score Block with Box-Drawing Lines (e.g. ━━━━━━━━━━━━ AFFORDABILITY SCORE: 90 / 100 ...)
     const scoreBoxRegex = /━{3,}\s*[\r\n]+(?:AFFORDABILITY|PREPAREDNESS)\s*SCORE:\s*(\d+)\s*\/\s*100\s*[\r\n]+([^\r\n]+)[\r\n]+\s*━{3,}/gi;
@@ -59,12 +66,19 @@ export class MarkdownPipe implements PipeTransform {
     const verdictSectionRegex = /(?:^|[\r\n])(?:#{1,4}\s*)?(?:FINANCIAL ADVISOR\'S VERDICT|FINANCIAL ADVISOR VIEW)\s*[\r\n]+(?:>\s*(?:Recommendation:\s*)?([^\r\n]+)|([^\r\n]+))/gi;
     text = text.replace(verdictSectionRegex, (_match, blockquoteText, plainText) => {
       const verdictContent = (blockquoteText || plainText || '').trim();
-      return `\n\n<div class="verdict-card"><div class="verdict-header"><span class="verdict-title">FINANCIAL ADVISOR'S VERDICT</span></div><div class="verdict-content"><p>${verdictContent}</p></div></div>\n\n`;
+      return `\n\n<div class="verdict-card"><div class="verdict-header"><span class="verdict-title">FINANCIAL ADVISOR'S VIEW</span></div><div class="verdict-content"><p>${verdictContent}</p></div></div>\n\n`;
     });
 
-    // Transform RECOMMENDATION into callout
+    // Transform FINAL RECOMMENDATION into callout
+    const finalRecRegex = /(?:^|[\r\n])(?:#{1,4}\s*)?FINAL RECOMMENDATION\s*[\r\n]+([^\r\n]+)/gi;
+    text = text.replace(finalRecRegex, (_match, recText) => {
+      return `\n\n<div class="quote-callout quote-final-rec"><strong>🎯 Final Strategic Recommendation:</strong><p>${recText.trim()}</p></div>\n\n`;
+    });
+
+    // Transform generic RECOMMENDATION into callout
     const recRegex = /(?:^|[\r\n])(?:#{1,4}\s*)?RECOMMENDATION\s*[\r\n]+([^\r\n]+)/gi;
     text = text.replace(recRegex, (_match, recText) => {
+      if (_match.includes('FINAL RECOMMENDATION')) return _match;
       return `\n\n<div class="quote-callout"><strong>💡 Strategic Recommendation:</strong><p>${recText.trim()}</p></div>\n\n`;
     });
 
@@ -127,6 +141,202 @@ export class MarkdownPipe implements PipeTransform {
     });
 
     return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  /**
+   * Transforms raw Goal Recommendation output from Pipeline 22027 into structured executive dashboard cards
+   */
+  private parseGoalRecommendation(text: string): string | null {
+    if (!text.includes('GOAL RECOMMENDATION') && !text.includes('GOAL AI') && !text.includes('INVESTMENT ALLOCATION')) {
+      return null;
+    }
+
+    // Extract Goal Name
+    const goalMatch = text.match(/Goal(?:\s*Name)?:\s*([^\r\n]+)/i);
+    const goalName = goalMatch ? goalMatch[1].trim() : 'Financial Goal';
+
+    // Extract Status
+    const statusMatch = text.match(/Status:\s*([^\r\n]+)/i);
+    const status = statusMatch ? statusMatch[1].trim() : 'On Track';
+
+    // Extract Target Amount
+    const targetMatch = text.match(/Target Amount:\s*([^\r\n]+)/i);
+    const targetAmount = targetMatch ? targetMatch[1].trim() : '₹0';
+
+    // Extract Current Saved
+    const savedMatch = text.match(/Current Saved(?:\s*Amount)?:\s*([^\r\n]+)/i);
+    const currentSaved = savedMatch ? savedMatch[1].trim() : '₹0';
+
+    // Extract Remaining Amount
+    const remainingMatch = text.match(/Remaining Amount:\s*([^\r\n]+)/i);
+    const remainingAmount = remainingMatch ? remainingMatch[1].trim() : '₹0';
+
+    // Extract Timeline
+    const timelineMatch = text.match(/Timeline:\s*([^\r\n]+)/i);
+    const timeline = timelineMatch ? timelineMatch[1].trim() : '—';
+
+    // Extract Monthly Boost
+    const boostMatch = text.match(/Recommended Monthly Increase:\s*([^\r\n]+)/i);
+    const boost = boostMatch ? boostMatch[1].trim() : '₹5,000';
+
+    // Extract Monthly Action description
+    const actionMatch = text.match(/Action:\s*([^\r\n]+)/i);
+    const action = actionMatch ? actionMatch[1].trim() : `Increase monthly savings by ${boost}.`;
+
+    // Extract Allocations
+    const equityMatch = text.match(/Equity:\s*(\d+)%?/i);
+    const debtMatch = text.match(/Debt:\s*(\d+)%?/i);
+    const liquidMatch = text.match(/Liquid:\s*(\d+)%?/i);
+
+    const equity = equityMatch ? parseInt(equityMatch[1], 10) : 50;
+    const debt = debtMatch ? parseInt(debtMatch[1], 10) : 40;
+    const liquid = liquidMatch ? parseInt(liquidMatch[1], 10) : 10;
+
+    // Extract Allocation Risk
+    const riskMatch = text.match(/Allocation Risk:\s*([^\r\n]+)/i) || text.match(/Risk:\s*([^\r\n]+)/i);
+    const risk = riskMatch ? riskMatch[1].trim() : 'Moderate';
+
+    // Extract Allocation Assessment text (Between ALLOCATION ASSESSMENT and AI ADVISOR VIEW / FINAL RECOMMENDATION)
+    let assessment = '';
+    const assessBlockMatch = text.match(/ALLOCATION ASSESSMENT\s*([\s\S]*?)(?=(?:AI ADVISOR VIEW|FINAL RECOMMENDATION|$))/i);
+    if (assessBlockMatch) {
+      assessment = assessBlockMatch[1]
+        .replace(/Allocation Risk:\s*[^\r\n]+/gi, '')
+        .replace(/Risk:\s*[^\r\n]+/gi, '')
+        .replace(/^[*\s\r\n#—-]+|[*\s\r\n#—-]+$/g, '')
+        .trim();
+    }
+
+    // Extract AI Advisor View
+    let advisorView = '';
+    const advisorMatch = text.match(/AI ADVISOR VIEW\s*([\s\S]*?)(?=(?:FINAL RECOMMENDATION|$))/i);
+    if (advisorMatch) {
+      advisorView = advisorMatch[1]
+        .replace(/^[*\s\r\n#—-]+|[*\s\r\n#—-]+$/g, '')
+        .trim();
+    }
+
+    // Extract Final Recommendation
+    let finalRec = '';
+    const finalMatch = text.match(/FINAL RECOMMENDATION\s*([\s\S]*?)$/i);
+    if (finalMatch) {
+      finalRec = finalMatch[1]
+        .replace(/^[*\s\r\n#—-]+|[*\s\r\n#—-]+$/g, '')
+        .trim();
+    }
+
+    // Format UI states
+    const isCaution = status.toLowerCase().includes('needs') || status.toLowerCase().includes('risk') || status.toLowerCase().includes('behind');
+    const statusBadgeClass = isCaution ? 'status-caution' : 'status-healthy';
+    const boostClean = boost.startsWith('+') ? boost : `+${boost}`;
+    
+    const riskClean = risk.toLowerCase();
+    const riskBadgeClass = riskClean.includes('high') ? 'risk-high' : riskClean.includes('low') ? 'risk-low' : 'risk-moderate';
+
+    return `
+<div class="goal-report-container">
+  <!-- 1. Hero Goal Card -->
+  <div class="goal-report-hero-card">
+    <div class="hero-top-row">
+      <div class="hero-title-group">
+        <span class="hero-label">🎯 Financial Milestone</span>
+        <h3 class="hero-goal-name">${goalName}</h3>
+      </div>
+      <div class="hero-status-badge ${statusBadgeClass}">
+        <span class="status-dot"></span>
+        <span>${status}</span>
+      </div>
+    </div>
+    <div class="goal-stats-grid">
+      <div class="goal-stat-cell">
+        <span class="stat-label">Target Amount</span>
+        <span class="stat-val font-accent">${targetAmount}</span>
+      </div>
+      <div class="goal-stat-cell">
+        <span class="stat-label">Current Saved</span>
+        <span class="stat-val color-saved">${currentSaved}</span>
+      </div>
+      <div class="goal-stat-cell">
+        <span class="stat-label">Remaining Gap</span>
+        <span class="stat-val color-remaining">${remainingAmount}</span>
+      </div>
+      <div class="goal-stat-cell">
+        <span class="stat-label">Timeline</span>
+        <span class="stat-val">${timeline}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Monthly Action Card -->
+  <div class="goal-monthly-action-card">
+    <div class="action-icon-box">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+    </div>
+    <div class="action-content">
+      <div class="action-header-row">
+        <span class="action-title">RECOMMENDED MONTHLY ACTION</span>
+        <span class="action-boost-pill">${boostClean} / mo</span>
+      </div>
+      <p class="action-desc">${action}</p>
+    </div>
+  </div>
+
+  <!-- 3. Investment Allocation Card -->
+  <div class="goal-allocation-card">
+    <div class="allocation-card-header">
+      <span class="alloc-title">💼 INVESTMENT ALLOCATION & RISK</span>
+      <span class="alloc-risk-badge ${riskBadgeClass}">Risk: ${risk}</span>
+    </div>
+    <div class="alloc-visual-bars">
+      <div class="alloc-bar-segment bar-equity" style="width: ${equity}%;" title="Equity: ${equity}%">
+        <span>Equity ${equity}%</span>
+      </div>
+      <div class="alloc-bar-segment bar-debt" style="width: ${debt}%;" title="Debt: ${debt}%">
+        <span>Debt ${debt}%</span>
+      </div>
+      <div class="alloc-bar-segment bar-liquid" style="width: ${liquid}%;" title="Liquid: ${liquid}%">
+        <span>${liquid}%</span>
+      </div>
+    </div>
+    <div class="alloc-legend-row">
+      <div class="legend-item"><span class="dot equity"></span>Equity: <strong>${equity}%</strong></div>
+      <div class="legend-item"><span class="dot debt"></span>Debt: <strong>${debt}%</strong></div>
+      <div class="legend-item"><span class="dot liquid"></span>Liquid: <strong>${liquid}%</strong></div>
+    </div>
+    ${assessment ? `
+    <div class="alloc-assessment-box">
+      <span class="box-icon">⚖️</span>
+      <p>${assessment}</p>
+    </div>` : ''}
+  </div>
+
+  <!-- 4. AI Advisor Verdict -->
+  ${advisorView ? `
+  <div class="advisor-verdict-card">
+    <div class="advisor-card-header">
+      <div class="advisor-badge">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        <span>FinMate AI Intelligence Verdict</span>
+      </div>
+    </div>
+    <div class="advisor-card-content">
+      <p>${advisorView}</p>
+    </div>
+  </div>` : ''}
+
+  <!-- 5. Final Recommendation Hero Card -->
+  ${finalRec ? `
+  <div class="final-recommendation-hero-card">
+    <div class="rec-header">
+      <span class="rec-icon">🎯</span>
+      <span class="rec-title">FINAL STRATEGIC RECOMMENDATION</span>
+    </div>
+    <div class="rec-content">
+      <p>${finalRec}</p>
+    </div>
+  </div>` : ''}
+</div>
+`;
   }
 
   private generateScoreCardHtml(score: number, statusText: string, title: string = 'AFFORDABILITY SCORE'): string {

@@ -70,6 +70,11 @@ export interface GoalItem {
   color?: string;
   monthlyBoost?: number;
   strategy?: string;
+  recommendationResponse?: string;
+  allocationRisk?: string;
+  equityAllocation?: number;
+  debtAllocation?: number;
+  liquidAllocation?: number;
   updatedAt?: any;
 }
 
@@ -166,7 +171,6 @@ export class FirestoreService {
         id: decisionId,
         createdAt: serverTimestamp()
       });
-      console.log('Financial decision saved to Firestore:', decision);
     } catch (error) {
       console.error('Error saving financial decision to Firestore:', error);
     }
@@ -203,7 +207,6 @@ export class FirestoreService {
         ...record,
         createdAt: serverTimestamp()
       });
-      console.log('Simulator record saved to Firestore:', record);
     } catch (error) {
       console.error('Error saving simulator record to Firestore:', error);
     }
@@ -317,11 +320,15 @@ export class FirestoreService {
           color: goal.color || 'var(--color-primary)',
           monthlyBoost: goal.monthlyBoost ? Number(goal.monthlyBoost) : null,
           strategy: goal.strategy || null,
+          recommendationResponse: goal.recommendationResponse || null,
+          allocationRisk: goal.allocationRisk || null,
+          equityAllocation: goal.equityAllocation != null ? Number(goal.equityAllocation) : null,
+          debtAllocation: goal.debtAllocation != null ? Number(goal.debtAllocation) : null,
+          liquidAllocation: goal.liquidAllocation != null ? Number(goal.liquidAllocation) : null,
           updatedAt: serverTimestamp()
         },
         { merge: true }
       );
-      console.log(`Goal ${goal.id} saved to Firestore for user ${userId}`);
     } catch (error) {
       console.error('Error saving goal to Firestore:', error);
       throw error;
@@ -337,7 +344,6 @@ export class FirestoreService {
       for (const goal of goals) {
         await this.saveGoal(userId, goal);
       }
-      console.log(`${goals.length} goals saved to Firestore for user ${userId}`);
     } catch (error) {
       console.error('Error saving all goals to Firestore:', error);
     }
@@ -368,11 +374,15 @@ export class FirestoreService {
           color: data.color || 'var(--color-primary)',
           monthlyBoost: data.monthlyBoost ? Number(data.monthlyBoost) : undefined,
           strategy: data.strategy || undefined,
+          recommendationResponse: data.recommendationResponse || undefined,
+          allocationRisk: data.allocationRisk || undefined,
+          equityAllocation: data.equityAllocation != null ? Number(data.equityAllocation) : undefined,
+          debtAllocation: data.debtAllocation != null ? Number(data.debtAllocation) : undefined,
+          liquidAllocation: data.liquidAllocation != null ? Number(data.liquidAllocation) : undefined,
           updatedAt: data.updatedAt
         });
       });
 
-      console.log(`Loaded ${goals.length} goals from Firestore for user ${userId}`);
       return goals;
     } catch (error) {
       console.warn('Could not load goals from Firestore (using fallback):', error);
@@ -388,7 +398,6 @@ export class FirestoreService {
     try {
       const goalDocRef = doc(this.db, 'users', userId, 'goals', goalId);
       await deleteDoc(goalDocRef);
-      console.log(`Goal ${goalId} deleted from Firestore for user ${userId}`);
     } catch (error) {
       console.error('Error deleting goal from Firestore:', error);
       throw error;
@@ -406,7 +415,6 @@ export class FirestoreService {
         const goalDocRef = doc(this.db, 'users', userId, 'goals', g.id);
         await setDoc(goalDocRef, { isPrimary: isPrimary, updatedAt: serverTimestamp() }, { merge: true });
       }
-      console.log(`Set primary goal to ${primaryGoalId} in Firestore for user ${userId}`);
     } catch (error) {
       console.error('Error updating primary goal in Firestore:', error);
     }
