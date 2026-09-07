@@ -1,28 +1,130 @@
-:root {
-  --font-primary: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+[data-theme="dark"],
+.dark-theme {
+  --font-primary: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Outfit', 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
-  /* Backgrounds */
-  --bg-app: #F4F8F6;
+  /* Backgrounds - Obsidian Luxury Fintech Palette */
+  --bg-app: #080C15;
+  --bg-app-radial: radial-gradient(120% 120% at 50% 0%, #0F192E 0%, #080C15 65%, #05080E 100%);
+  --bg-card: #0F172A;
+  --bg-card-hover: #15223D;
+  --bg-card-elevated: #131E35;
+  --bg-subtle: #111A2E;
+  --bg-subtle-alpha: rgba(17, 26, 46, 0.7);
+  --bg-blue-light: rgba(6, 182, 212, 0.1);
+  --bg-glass: rgba(15, 23, 42, 0.75);
+  --bg-input: #0B1120;
+  
+  /* Primary Brand: Luminous Emerald & Mint */
+  --color-primary: #10B981;
+  --color-primary-hover: #059669;
+  --color-primary-light: rgba(16, 185, 129, 0.12);
+  --color-primary-glow: rgba(16, 185, 129, 0.28);
+  --color-primary-alpha: rgba(16, 185, 129, 0.15);
+
+  /* Secondary Brand: Electric Cyan & Indigo */
+  --color-cyan: #06B6D4;
+  --color-cyan-glow: rgba(6, 182, 212, 0.28);
+  --color-indigo: #6366F1;
+
+  /* Typography */
+  --text-main: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-light: #64748B;
+  --text-inverse: #0F172A;
+
+  /* Status Tokens */
+  --color-mint-bg: rgba(16, 185, 129, 0.15);
+  --color-mint-text: #34D399;
+  --color-mint-border: rgba(52, 211, 153, 0.35);
+
+  --color-danger-bg: rgba(239, 68, 68, 0.15);
+  --color-danger-text: #F87171;
+  --color-danger-border: rgba(248, 113, 113, 0.35);
+
+  --color-warning-bg: rgba(245, 158, 11, 0.15);
+  --color-warning-text: #FBBF24;
+  --color-warning-border: rgba(251, 191, 36, 0.35);
+
+  --color-purple-bg: rgba(139, 92, 246, 0.15);
+  --color-purple-text: #A78BFA;
+  --color-purple-border: rgba(167, 139, 250, 0.35);
+
+  --color-info-bg: rgba(6, 182, 212, 0.15);
+  --color-info-text: #38BDF8;
+  --color-info-border: rgba(56, 189, 248, 0.35);
+
+  /* Asset Allocation Colors */
+  --color-equity: #10B981;
+  --color-debt: #06B6D4;
+  --color-liquid: #F59E0B;
+  --color-gold: #EAB308;
+  --color-crypto: #8B5CF6;
+
+  /* Borders & Dividers */
+  --border-card: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-hover: rgba(16, 185, 129, 0.4);
+  --border-accent: rgba(16, 185, 129, 0.4);
+  --border-outer: rgba(16, 185, 129, 0.3);
+
+  /* Shadows */
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.65);
+  --shadow-glow: 0 0 35px rgba(16, 185, 129, 0.2);
+  --shadow-glow-cyan: 0 0 35px rgba(6, 182, 212, 0.2);
+
+  /* Range Sliders */
+  --slider-track: #1E293B;
+  --slider-thumb: #10B981;
+  --slider-thumb-border: #0F172A;
+
+  /* Scrollbar */
+  --scrollbar-thumb: #334155;
+  --scrollbar-thumb-hover: #475569;
+
+  /* Modal Backdrop */
+  --modal-backdrop: rgba(4, 7, 14, 0.78);
+}
+
+:root,
+[data-theme="light"],
+.light-theme {
+  --font-primary: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Outfit', 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Backgrounds - Crisp Clean Light Palette */
+  --bg-app: #F8FAFC;
+  --bg-app-radial: radial-gradient(120% 120% at 50% 0%, #FFFFFF 0%, #F1F5F9 75%, #E2E8F0 100%);
   --bg-card: #FFFFFF;
-  --bg-card-hover: #F0FDF4;
+  --bg-card-hover: #F8FAFC;
   --bg-card-elevated: #FFFFFF;
-  --bg-subtle: #EEF7F2;
-  --bg-subtle-alpha: rgba(238, 247, 242, 0.75);
-  --bg-blue-light: #ECFDF5;
-  --bg-glass: rgba(255, 255, 255, 0.9);
+  --bg-subtle: #F1F5F9;
+  --bg-subtle-alpha: rgba(241, 245, 249, 0.85);
+  --bg-blue-light: #ECFEFF;
+  --bg-glass: rgba(255, 255, 255, 0.85);
   --bg-input: #FFFFFF;
   
-  /* Primary Brand: Emerald & Mint */
+  /* Primary Brand: Emerald */
   --color-primary: #059669;
   --color-primary-hover: #047857;
   --color-primary-light: #ECFDF5;
   --color-primary-glow: rgba(5, 150, 105, 0.2);
   --color-primary-alpha: rgba(5, 150, 105, 0.08);
 
+  /* Secondary Brand */
+  --color-cyan: #0891B2;
+  --color-cyan-glow: rgba(8, 145, 178, 0.2);
+  --color-indigo: #4F46E5;
+
   /* Typography */
   --text-main: #0F172A;
   --text-secondary: #334155;
-  --text-muted: #5F6D8E;
+  --text-muted: #64748B;
   --text-light: #94A3B8;
   --text-inverse: #FFFFFF;
 
@@ -43,32 +145,34 @@
   --color-purple-text: #7C3AED;
   --color-purple-border: #DDD6FE;
 
-  --color-info-bg: #ECFDF5;
-  --color-info-text: #059669;
-  --color-info-border: #A7F3D0;
+  --color-info-bg: #ECFEFF;
+  --color-info-text: #0891B2;
+  --color-info-border: #A5F3FC;
 
   /* Asset Allocation Colors */
   --color-equity: #059669;
-  --color-debt: #0D9488;
+  --color-debt: #0891B2;
   --color-liquid: #D97706;
-  --color-gold: #EAB308;
-  --color-crypto: #8B5CF6;
+  --color-gold: #CA8A04;
+  --color-crypto: #7C3AED;
 
   /* Borders & Dividers */
   --border-card: #E2E8F0;
-  --border-subtle: #EDF2F7;
+  --border-subtle: #F1F5F9;
   --border-hover: #CBD5E1;
   --border-accent: rgba(5, 150, 105, 0.3);
-  --border-outer: rgba(16, 185, 129, 0.25);
+  --border-outer: rgba(5, 150, 105, 0.25);
 
   /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 6px 20px rgba(15, 23, 42, 0.06);
-  --shadow-lg: 0 14px 36px rgba(15, 23, 42, 0.08);
-  --shadow-glow: 0 0 25px rgba(5, 150, 105, 0.14);
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 6px 20px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 14px 36px rgba(15, 23, 42, 0.09);
+  --shadow-glow: 0 0 25px rgba(5, 150, 105, 0.15);
+  --shadow-glow-cyan: 0 0 25px rgba(8, 145, 178, 0.15);
 
   /* Range Sliders */
   --slider-track: #E2E8F0;
+  --slider-thumb: #059669;
   --slider-thumb-border: #FFFFFF;
 
   /* Scrollbar */
@@ -83,6 +187,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease;
 }
 
 html {
@@ -94,6 +199,10 @@ html {
 
 body {
   font-family: var(--font-primary);
+  letter-spacing: -0.012em;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
+  background: var(--bg-app-radial);
+  background-attachment: fixed;
   background-color: var(--bg-app);
   color: var(--text-main);
   min-height: 100vh;
@@ -102,6 +211,17 @@ body {
   padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6,
+.page-title,
+.feature-title,
+.section-title,
+.hero-title,
+.brand-title,
+.gate-title {
+  font-family: var(--font-heading);
+  letter-spacing: -0.028em;
 }
 
 button {
@@ -113,6 +233,8 @@ button {
 
 input, select, textarea {
   font-family: inherit;
+  color: var(--text-main);
+  background-color: var(--bg-input);
 }
 
 /* Custom Scrollbars */
@@ -135,16 +257,78 @@ input, select, textarea {
   }
 }
 
-/* Glassmorphic Utility */
+/* Glassmorphism Utilities */
 .enterprise-glass {
   background: var(--bg-glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-card);
 }
 
-/* Pulse animation */
+.enterprise-glass-elevated {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%), var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-card);
+  box-shadow: var(--shadow-md);
+}
+
+/* Glow Border Utility */
+.glow-border-emerald {
+  position: relative;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.6), transparent 60%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+/* 3D Card Tilt Container */
+.perspective-card-container {
+  perspective: 1000px;
+}
+
+/* Micro Animations */
 @keyframes enterprise-glow {
   0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.04); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+@keyframes float-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 0.4; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  position: relative;
+  overflow: hidden;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+    animation: shimmer-sweep 2.5s infinite;
+  }
 }

@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { ThemeService } from '../../services/theme.service';
 
 interface NavItem {
   id: string;
@@ -19,6 +20,19 @@ interface NavItem {
 })
 export class SidebarComponent {
   authService = inject(AuthService);
+  themeService = inject(ThemeService);
+
+  isCollapsed = signal<boolean>(
+    typeof window !== 'undefined' ? localStorage.getItem('finmate_sidebar_collapsed') === 'true' : false
+  );
+
+  toggleCollapse(): void {
+    const next = !this.isCollapsed();
+    this.isCollapsed.set(next);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('finmate_sidebar_collapsed', String(next));
+    }
+  }
 
   navItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: 'grid', route: '/dashboard' },

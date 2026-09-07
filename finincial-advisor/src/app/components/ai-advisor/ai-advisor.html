@@ -76,6 +76,9 @@
 
     <!-- Main Chat Conversation Panel -->
     <main class="chat-panel">
+      <!-- Minimal 3D Ambient Background Canvas -->
+      <canvas #chatBgCanvas class="chat-bg-canvas"></canvas>
+
       <!-- Messages Viewport -->
       <div class="messages-viewport" #chatViewport>
         @if (!hasActiveTopic) {
@@ -107,10 +110,19 @@
               </div>
 
               @if (msg.isTyping) {
-                <div class="typing-bubble">
-                  <span class="dot"></span>
-                  <span class="dot"></span>
-                  <span class="dot"></span>
+                <div class="aava-chat-computing-card">
+                  <div class="computing-header">
+                    <div class="aava-mini-pulse">
+                      <span class="pulse-dot"></span>
+                    </div>
+                    <span class="computing-agent-title">AAVA Financial Intelligence Agent</span>
+                  </div>
+                  <div class="computing-body">
+                    <span class="computing-text">Evaluating purchase impact, debt ratio & cash reserves...</span>
+                    <div class="shimmer-progress-track">
+                      <div class="shimmer-progress-fill"></div>
+                    </div>
+                  </div>
                 </div>
               } @else {
                 <div class="bubble bot-bubble">
