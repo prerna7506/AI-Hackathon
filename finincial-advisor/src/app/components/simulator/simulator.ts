@@ -1,8 +1,9 @@
-import { Component, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { FirestoreService, SimulatorHistoryRecord } from '../../services/firestore.service';
 import { SimulatorWorkflowService, PreparednessReportData } from '../../services/simulator-advisor.service';
 
 export interface ScenarioOption {
@@ -21,10 +22,11 @@ export interface ScenarioOption {
   templateUrl: './simulator.html',
   styleUrl: './simulator.scss'
 })
-export class SimulatorComponent {
+export class SimulatorComponent implements OnDestroy {
   authService = inject(AuthService);
   router = inject(Router);
   private simulatorService = inject(SimulatorWorkflowService);
+  private firestoreService = inject(FirestoreService);
   private cdr = inject(ChangeDetectorRef);
 
   protected readonly Math = Math;
@@ -49,25 +51,27 @@ export class SimulatorComponent {
     }
   ];
 
-  // 10 Base Parameters - Defaulted to 0
-  monthlyExpenses = 0;
-  jobLossMonths = 0;
-  medicalBill = 0;
+  // 10 Base Parameters - Defaulted to sensible starting numbers for immediate interactivity
+  monthlyExpenses = 65000;
+  jobLossMonths = 6;
+  medicalBill = 400000;
   bigExpense = 0;
-  fdInvestment = 0;
-  insurance = 0;
-  liquidFund = 0;
-  savingsBankBalance = 0;
-  goldInvestment = 0;
-  marketInvestment = 0;
+  fdInvestment = 300000;
+  insurance = 500000;
+  liquidFund = 400000;
+  savingsBankBalance = 200000;
+  goldInvestment = 150000;
+  marketInvestment = 1200000;
 
-  // AI Workflow State (Pipeline 21759)
+  // AI Workflow State (Pipeline 21759 - Single AAVA Agent)
   isAnalyzing = false;
   analysisResult: string | null = null;
   reportData: PreparednessReportData | null = null;
   analysisError: string | null = null;
   copiedSuccess = false;
   lastPrompt = '';
+  analysisSeconds = 0;
+  private timerInterval: any = null;
 
   get selectedScenario(): ScenarioOption {
     return this.scenarios.find(s => s.selected) || this.scenarios[0];
@@ -92,7 +96,7 @@ export class SimulatorComponent {
   get totalReservesCoverageMonths(): number {
     const expenses = Number(this.monthlyExpenses) || 0;
     if (expenses <= 0) return 0;
-    return parseFloat((this.totalEmergencyPool / expenses).toFixed(1));
+    return parseFloat((this.immediateLiquidCash / expenses).toFixed(1));
   }
 
   get scenarioCost(): number {
@@ -107,6 +111,8 @@ export class SimulatorComponent {
 
   selectScenario(id: string): void {
     this.scenarios.forEach(sc => sc.selected = (sc.id === id));
+    this.reportData = null;
+    this.analysisResult = null;
   }
 
   openSignInModal(): void {
@@ -128,6 +134,20 @@ export class SimulatorComponent {
     this.analysisResult = null;
   }
 
+  loadDemoPreset(): void {
+    this.monthlyExpenses = 65000;
+    this.jobLossMonths = 6;
+    this.medicalBill = 450000;
+    this.insurance = 500000;
+    this.savingsBankBalance = 250000;
+    this.liquidFund = 350000;
+    this.fdInvestment = 400000;
+    this.goldInvestment = 200000;
+    this.marketInvestment = 1500000;
+    this.reportData = null;
+    this.analysisResult = null;
+  }
+
   getCurrentParams(): any {
     return {
       monthlyExpenses: Number(this.monthlyExpenses) || 0,
@@ -145,8 +165,13 @@ export class SimulatorComponent {
   }
 
   /**
-   * Formats the prompt cleanly to match the tool schema expected by Pipeline 21759
+   * Helper for dynamic slider gradient track fill
    */
+  getSliderPercentage(value: number, max: number): number {
+    if (!max || max <= 0) return 0;
+    return Math.min(100, Math.max(0, (value / max) * 100));
+  }
+
   buildPrompt(): string {
     const scenarioKey = this.selectedScenario.id === 'medical_emergency' ? 'medical_bill' : this.selectedScenario.id;
     const exp = Number(this.monthlyExpenses) || 0;
@@ -185,26 +210,76 @@ Please evaluate my preparedness score, required amount, accessible savings, safe
     this.analysisResult = null;
     this.reportData = null;
     this.analysisError = null;
+    this.analysisSeconds = 0;
+
+    // Start timer for single-agent live computation feedback
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    this.timerInterval = setInterval(() => {
+      this.analysisSeconds++;
+      this.cdr.detectChanges();
+    }, 1000);
 
     this.simulatorService.runWorkflowAndAwaitResult(prompt).subscribe({
       next: (response) => {
+        this.stopTimer();
         const text = this.simulatorService.extractReplyText(response, currentParams);
         this.analysisResult = text;
-        this.reportData = this.simulatorService.buildStructuredReport(currentParams, text);
+        const rep = this.simulatorService.buildStructuredReport(currentParams, text);
+        this.reportData = rep;
         this.isAnalyzing = false;
+        this.saveRecord(rep);
         this.cdr.markForCheck();
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Simulator Pipeline 21759 error:', err);
+        this.stopTimer();
+        console.warn('Simulator Pipeline 21759 error, using quantitative engine:', err);
         const fallbackText = this.simulatorService.generateCalculationReport(currentParams);
         this.analysisResult = fallbackText;
-        this.reportData = this.simulatorService.buildStructuredReport(currentParams, fallbackText);
+        const rep = this.simulatorService.buildStructuredReport(currentParams, fallbackText);
+        this.reportData = rep;
         this.isAnalyzing = false;
+        this.saveRecord(rep);
         this.cdr.markForCheck();
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private stopTimer(): void {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+  }
+
+  private saveRecord(rep: PreparednessReportData): void {
+    const record: SimulatorHistoryRecord = {
+      id: `sim-${Date.now()}`,
+      scenarioId: this.selectedScenario.id,
+      scenarioTitle: `${this.selectedScenario.title} Stress Test`,
+      score: rep.score,
+      status: rep.status,
+      monthlyExpenses: Number(this.monthlyExpenses) || 0,
+      accessibleSavings: rep.accessibleSavings,
+      totalAssets: rep.totalAssets,
+      backupMonths: rep.backupMonths,
+      shortfall: rep.shortfall,
+      timestamp: 'Just now'
+    };
+
+    // Save to localStorage
+    try {
+      const existing = JSON.parse(localStorage.getItem('finmate_simulator_history') || '[]');
+      existing.unshift(record);
+      localStorage.setItem('finmate_simulator_history', JSON.stringify(existing.slice(0, 20)));
+    } catch {}
+
+    // If logged in, persist to Firestore
+    const uid = this.authService.currentUserId();
+    if (uid) {
+      this.firestoreService.saveSimulatorRecord(uid, record);
+    }
   }
 
   copyAnalysis(): void {
@@ -217,5 +292,9 @@ Please evaluate my preparedness score, required amount, accessible savings, safe
 
   continueInChat(): void {
     this.router.navigate(['/ai-advisor'], { queryParams: { prompt: this.lastPrompt, pipelineId: '21759' } });
+  }
+
+  ngOnDestroy(): void {
+    this.stopTimer();
   }
 }

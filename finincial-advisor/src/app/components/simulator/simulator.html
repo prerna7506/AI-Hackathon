@@ -5,7 +5,7 @@
       <div class="header-titles">
         <div class="title-with-pill">
           <h1 class="page-title">What-If Simulator</h1>
-          <span class="version-pill">Interactive Stress Tester</span>
+          <span class="version-pill">Resilience Stress Tester</span>
         </div>
         <p class="page-subtitle">Stress-test your financial resilience against life events, emergencies, and liquidity shocks.</p>
       </div>
@@ -31,7 +31,7 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             }
           </div>
-          <span>{{ isAnalyzing ? 'Analyzing...' : 'Analyze with Aava' }}</span>
+          <span>{{ isAnalyzing ? 'Analyzing (' + analysisSeconds + 's)...' : 'Analyze with Aava' }}</span>
           @if (!isAnalyzing) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
           }
@@ -48,7 +48,7 @@
       </div>
     </header>
 
-    <!-- 2-Column Simulator Layout (Left: Controls, Right: Analysis Result in White Space) -->
+    <!-- 2-Column Simulator Layout (Left: Controls, Right: Analysis Result) -->
     <div class="simulator-grid-layout">
       <!-- Left Column: Controls & Parameters -->
       <div class="controls-column">
@@ -90,20 +90,23 @@
           </div>
         </div>
 
-        <!-- Base Parameters Sliders Card -->
+        <!-- Base Parameters Sliders Card with Dual Slider/Input Physics -->
         <div class="card sliders-card">
           <div class="sliders-header">
             <div>
-              <h4 class="card-section-title">BASE PARAMETERS</h4>
-              <span class="sliders-subtitle">Parameters for {{ selectedScenario.title }}</span>
+              <h4 class="card-section-title">TUNABLE PARAMETERS</h4>
+              <span class="sliders-subtitle">Drag sliders or type values for {{ selectedScenario.title }}</span>
             </div>
-            <button class="btn-reset" (click)="resetParameters()">Reset to 0</button>
+            <div class="sliders-actions">
+              <button class="btn-demo" (click)="loadDemoPreset()" title="Populate Demo Financial Profile">Demo Preset</button>
+              <button class="btn-reset" (click)="resetParameters()" title="Reset all to 0">Reset</button>
+            </div>
           </div>
 
           <div class="sliders-content">
-            <!-- Group 1: Scenario Shock & Living Variables -->
+            <!-- Group 1: Scenario Shock Variables -->
             <div class="param-category-divider">
-              <span class="divider-title">{{ selectedScenario.title }} Variables</span>
+              <span class="divider-title">{{ selectedScenario.title }} Shock Variables</span>
             </div>
 
             <!-- Scenario: Job Loss -->
@@ -111,7 +114,7 @@
               <!-- Monthly Expenses -->
               <div class="slider-group">
                 <div class="slider-label-row">
-                  <span class="label">Monthly Expenses</span>
+                  <span class="label">Monthly Living Expenses</span>
                   <div class="param-input-wrap">
                     <span class="currency-prefix">₹</span>
                     <input 
@@ -119,11 +122,20 @@
                       class="param-number-input" 
                       [(ngModel)]="monthlyExpenses" 
                       min="0" 
-                      step="1000"
-                      placeholder="0"
+                      max="500000"
+                      step="5000"
                     />
                   </div>
                 </div>
+                <input 
+                  type="range" 
+                  class="param-range-slider" 
+                  [(ngModel)]="monthlyExpenses" 
+                  min="10000" 
+                  max="300000" 
+                  step="5000"
+                  [style.--fill-pct]="getSliderPercentage(monthlyExpenses, 300000) + '%'"
+                />
               </div>
 
               <!-- Job Loss Duration -->
@@ -135,14 +147,22 @@
                       type="number" 
                       class="param-number-input duration-input" 
                       [(ngModel)]="jobLossMonths" 
-                      min="0" 
-                      max="120" 
+                      min="1" 
+                      max="36" 
                       step="1"
-                      placeholder="0"
                     />
                     <span class="unit-suffix">Months</span>
                   </div>
                 </div>
+                <input 
+                  type="range" 
+                  class="param-range-slider range-amber" 
+                  [(ngModel)]="jobLossMonths" 
+                  min="1" 
+                  max="24" 
+                  step="1"
+                  [style.--fill-pct]="getSliderPercentage(jobLossMonths, 24) + '%'"
+                />
               </div>
             }
 
@@ -159,11 +179,20 @@
                       class="param-number-input" 
                       [(ngModel)]="medicalBill" 
                       min="0" 
-                      step="10000"
-                      placeholder="0"
+                      max="2500000"
+                      step="25000"
                     />
                   </div>
                 </div>
+                <input 
+                  type="range" 
+                  class="param-range-slider range-danger" 
+                  [(ngModel)]="medicalBill" 
+                  min="50000" 
+                  max="2000000" 
+                  step="25000"
+                  [style.--fill-pct]="getSliderPercentage(medicalBill, 2000000) + '%'"
+                />
               </div>
 
               <!-- Health Insurance Cover -->
@@ -177,17 +206,26 @@
                       class="param-number-input" 
                       [(ngModel)]="insurance" 
                       min="0" 
-                      step="25000"
-                      placeholder="0"
+                      max="3000000"
+                      step="50000"
                     />
                   </div>
                 </div>
+                <input 
+                  type="range" 
+                  class="param-range-slider range-emerald" 
+                  [(ngModel)]="insurance" 
+                  min="0" 
+                  max="2500000" 
+                  step="50000"
+                  [style.--fill-pct]="getSliderPercentage(insurance, 2500000) + '%'"
+                />
               </div>
 
               <!-- Monthly Expenses -->
               <div class="slider-group">
                 <div class="slider-label-row">
-                  <span class="label">Monthly Expenses</span>
+                  <span class="label">Monthly Base Expenses</span>
                   <div class="param-input-wrap">
                     <span class="currency-prefix">₹</span>
                     <input 
@@ -195,15 +233,24 @@
                       class="param-number-input" 
                       [(ngModel)]="monthlyExpenses" 
                       min="0" 
-                      step="1000"
-                      placeholder="0"
+                      max="500000"
+                      step="5000"
                     />
                   </div>
                 </div>
+                <input 
+                  type="range" 
+                  class="param-range-slider" 
+                  [(ngModel)]="monthlyExpenses" 
+                  min="10000" 
+                  max="300000" 
+                  step="5000"
+                  [style.--fill-pct]="getSliderPercentage(monthlyExpenses, 300000) + '%'"
+                />
               </div>
             }
 
-            <!-- Group 2: Liquidity & Asset Holdings (Portfolio Reserves) -->
+            <!-- Group 2: Liquidity & Asset Holdings -->
             <div class="param-category-divider">
               <span class="divider-title">Liquidity & Asset Holdings</span>
             </div>
@@ -211,7 +258,7 @@
             <!-- Savings Bank Account Balance -->
             <div class="slider-group">
               <div class="slider-label-row">
-                <span class="label">Savings Bank Account Balance</span>
+                <span class="label">Savings Bank Balance</span>
                 <div class="param-input-wrap">
                   <span class="currency-prefix">₹</span>
                   <input 
@@ -219,11 +266,20 @@
                     class="param-number-input" 
                     [(ngModel)]="savingsBankBalance" 
                     min="0" 
-                    step="5000"
-                    placeholder="0"
+                    max="2000000"
+                    step="10000"
                   />
                 </div>
               </div>
+              <input 
+                type="range" 
+                class="param-range-slider range-blue" 
+                [(ngModel)]="savingsBankBalance" 
+                min="0" 
+                max="1000000" 
+                step="10000"
+                [style.--fill-pct]="getSliderPercentage(savingsBankBalance, 1000000) + '%'"
+              />
             </div>
 
             <!-- Liquid Fund -->
@@ -237,17 +293,26 @@
                     class="param-number-input" 
                     [(ngModel)]="liquidFund" 
                     min="0" 
-                    step="10000"
-                    placeholder="0"
+                    max="3000000"
+                    step="25000"
                   />
                 </div>
               </div>
+              <input 
+                type="range" 
+                class="param-range-slider range-emerald" 
+                [(ngModel)]="liquidFund" 
+                min="0" 
+                max="1500000" 
+                step="25000"
+                [style.--fill-pct]="getSliderPercentage(liquidFund, 1500000) + '%'"
+              />
             </div>
 
             <!-- FD Investment -->
             <div class="slider-group">
               <div class="slider-label-row">
-                <span class="label">FD Investment (Fixed Deposit)</span>
+                <span class="label">Fixed Deposits (FD)</span>
                 <div class="param-input-wrap">
                   <span class="currency-prefix">₹</span>
                   <input 
@@ -255,53 +320,85 @@
                     class="param-number-input" 
                     [(ngModel)]="fdInvestment" 
                     min="0" 
-                    step="10000"
-                    placeholder="0"
+                    max="3000000"
+                    step="25000"
                   />
+                </div>
+              </div>
+              <input 
+                type="range" 
+                class="param-range-slider range-amber" 
+                [(ngModel)]="fdInvestment" 
+                min="0" 
+                max="2000000" 
+                step="25000"
+                [style.--fill-pct]="getSliderPercentage(fdInvestment, 2000000) + '%'"
+              />
+            </div>
+
+            <!-- Market & Gold Collapsible Summary -->
+            <div class="growth-assets-row">
+              <div class="growth-input-col">
+                <span class="mini-label">Gold Holdings</span>
+                <div class="param-input-wrap">
+                  <span class="currency-prefix">₹</span>
+                  <input type="number" class="param-number-input" [(ngModel)]="goldInvestment" min="0" step="25000" />
+                </div>
+              </div>
+              <div class="growth-input-col">
+                <span class="mini-label">Market Equities</span>
+                <div class="param-input-wrap">
+                  <span class="currency-prefix">₹</span>
+                  <input type="number" class="param-number-input" [(ngModel)]="marketInvestment" min="0" step="50000" />
                 </div>
               </div>
             </div>
 
-            <!-- Gold Investment -->
-            <div class="slider-group">
-              <div class="slider-label-row">
-                <span class="label">Gold Investment</span>
-                <div class="param-input-wrap">
-                  <span class="currency-prefix">₹</span>
-                  <input 
-                    type="number" 
-                    class="param-number-input" 
-                    [(ngModel)]="goldInvestment" 
-                    min="0" 
-                    step="10000"
-                    placeholder="0"
-                  />
-                </div>
+          </div>
+        </div>
+
+        <!-- 3D Liquidity Waterfall Hierarchy Card -->
+        <div class="card waterfall-card">
+          <div class="waterfall-header">
+            <span class="wf-icon">🌊</span>
+            <div>
+              <h4 class="card-section-title">LIQUIDITY DEFENSE HIERARCHY</h4>
+              <span class="wf-subtitle">Order of fund absorption during a crisis</span>
+            </div>
+          </div>
+
+          <div class="waterfall-levels">
+            <div class="wf-level level-1">
+              <div class="wf-bar-fill"></div>
+              <div class="wf-meta">
+                <span class="level-tag">Tier 1 • Instant Cash</span>
+                <strong class="level-val">₹{{ immediateLiquidCash | number }}</strong>
               </div>
+              <span class="level-sub">Bank Savings + Liquid Funds (Zero Exit Penalty)</span>
             </div>
 
-            <!-- Market Investment -->
-            <div class="slider-group">
-              <div class="slider-label-row">
-                <span class="label">Market Investment (Equity)</span>
-                <div class="param-input-wrap">
-                  <span class="currency-prefix">₹</span>
-                  <input 
-                    type="number" 
-                    class="param-number-input" 
-                    [(ngModel)]="marketInvestment" 
-                    min="0" 
-                    step="10000"
-                    placeholder="0"
-                  />
-                </div>
+            <div class="wf-level level-2">
+              <div class="wf-bar-fill"></div>
+              <div class="wf-meta">
+                <span class="level-tag">Tier 2 • Safe Reserves</span>
+                <strong class="level-val">₹{{ fdInvestment | number }}</strong>
               </div>
+              <span class="level-sub">Fixed Deposits (Minor premature interest penalty)</span>
+            </div>
+
+            <div class="wf-level level-3">
+              <div class="wf-bar-fill"></div>
+              <div class="wf-meta">
+                <span class="level-tag">Tier 3 • Shielded Growth</span>
+                <strong class="level-val">₹{{ (goldInvestment + marketInvestment) | number }}</strong>
+              </div>
+              <span class="level-sub">Gold & Equities (Protected from distress sales)</span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Right Column: Inline Visual Aava AI Analysis & Charts Panel -->
+      <!-- Right Column: Visual Analysis Report -->
       <div class="analysis-panel-column">
         <div class="card analysis-panel-card">
           <!-- Panel Header -->
@@ -312,7 +409,7 @@
               </div>
               <div class="panel-header-titles">
                 <h3 class="panel-title">Financial Preparedness Report</h3>
-                <span class="panel-subtitle">AI Resilience Engine • {{ selectedScenario.title }} Stress Test</span>
+                <span class="panel-subtitle">AAVA Single-Agent AI • {{ selectedScenario.title }} Stress Test</span>
               </div>
             </div>
 
@@ -333,16 +430,27 @@
 
           <!-- Panel Body: Dynamic States -->
           <div class="panel-body">
-            <!-- State 1: Analyzing / Loading -->
+            <!-- State 1: Single-Agent Aava Loading / Analyzing -->
             @if (isAnalyzing) {
               <div class="panel-loading-state">
-                <div class="pulse-loader">
-                  <div class="pulse-ring"></div>
-                  <div class="pulse-icon">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <div class="single-agent-pulse-wrap">
+                  <div class="agent-pulse-ring ring-1"></div>
+                  <div class="agent-pulse-ring ring-2"></div>
+                  <div class="agent-core-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                   </div>
                 </div>
-                <h4 class="loading-title">Analyzing your financial resilience...</h4>
+
+                <div class="agent-badge-pill">
+                  <span class="live-dot"></span>
+                  <span>AAVA Financial Intelligence Agent Active</span>
+                </div>
+
+                <h4 class="loading-title">Stress-Testing Portfolio Resilience...</h4>
+                <p class="loading-sub">
+                  Evaluating liquidity runways, calculating emergency buffer absorption, and compiling your stress verdict.
+                </p>
+                <span class="computation-timer">Execution time: {{ analysisSeconds }}s</span>
               </div>
             } 
 
@@ -405,7 +513,7 @@
                             <div class="bar-left-meta">
                               <span class="bar-label">{{ item.label }}</span>
                               @if (item.badge) {
-                                <span class="bar-badge" [style.color]="item.color" [style.background]="item.color + '15'">{{ item.badge }}</span>
+                                <span class="bar-badge" [style.color]="item.color" [style.background]="item.color + '18'">{{ item.badge }}</span>
                               }
                             </div>
                             <strong class="bar-amount" [style.color]="item.color">₹{{ item.amount | number }}</strong>
@@ -437,7 +545,7 @@
                     <div class="donut-chart-container">
                       <div class="donut-svg-wrap">
                         <svg class="donut-svg" viewBox="0 0 160 160">
-                          <circle cx="80" cy="80" r="60" stroke="#F1F5F9" stroke-width="18" fill="none" />
+                          <circle cx="80" cy="80" r="60" stroke="var(--border-subtle)" stroke-width="18" fill="none" />
                           @for (slice of reportData.fundsBreakdown; track slice.label) {
                             @if (slice.amount > 0) {
                               <circle 
@@ -511,7 +619,13 @@
                     <div class="metric-primary-val text-blue">{{ reportData.backupMonths }} Months</div>
                     <span class="metric-desc-small">Living Expenses Covered</span>
                     <div class="runway-benchmark-bar">
-                      <div class="runway-fill" [style.width.%]="Math.min(100, (reportData.backupMonths / 12) * 100)"></div>
+                      <div 
+                        class="runway-fill" 
+                        [class.runway-safe]="reportData.backupMonths >= 6"
+                        [class.runway-moderate]="reportData.backupMonths >= 3 && reportData.backupMonths < 6"
+                        [class.runway-danger]="reportData.backupMonths < 3"
+                        [style.width.%]="Math.min(100, (reportData.backupMonths / 12) * 100)"
+                      ></div>
                     </div>
                     <div class="benchmark-markers">
                       <span>0m</span>
@@ -584,7 +698,7 @@
                 <h3 class="empty-title">Ready to Stress-Test Your Finances</h3>
                 <p class="empty-desc">
                   Select a scenario and adjust your base parameters on the left. When you're ready, click 
-                  <strong>"Analyze with Aava"</strong> to generate your interactive charts, resilience score, and financial strategy.
+                  <strong>"Analyze with Aava"</strong> to generate your interactive resilience score, breakdown charts, and strategy.
                 </p>
 
                 <!-- Quick Parameter Summary Badges -->
@@ -594,18 +708,18 @@
                     <strong class="box-val">{{ selectedScenario.title }}</strong>
                   </div>
                   <div class="summary-box">
-                    <span class="box-label">Accessible Savings</span>
-                    <strong class="box-val">₹{{ immediateLiquidCash | number }}</strong>
+                    <span class="box-label">Immediate Liquid Cash</span>
+                    <strong class="box-val text-emerald">₹{{ immediateLiquidCash | number }}</strong>
                   </div>
                   <div class="summary-box">
-                    <span class="box-label">Total Emergency Pool</span>
-                    <strong class="box-val">₹{{ totalEmergencyPool | number }}</strong>
+                    <span class="box-label">Safety Living Runway</span>
+                    <strong class="box-val text-blue">{{ totalReservesCoverageMonths }} Months</strong>
                   </div>
                 </div>
 
                 <button class="btn-run-initial" (click)="analyzeWithAava()">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                  <span>Analyze with Aava Now</span>
+                  <span>Analyze with Aava Resilience Engine</span>
                 </button>
               </div>
             }
@@ -615,7 +729,7 @@
     </div>
   </main>
 
-  <!-- Sign In Blur Gate Overlay for Unauthenticated Users (Identical to AI Advisor) -->
+  <!-- Sign In Blur Gate Overlay for Unauthenticated Users -->
   @if (!authService.isLoggedIn() && !authService.isAuthChecking()) {
     <div class="auth-gate-overlay">
       <div class="auth-gate-card">

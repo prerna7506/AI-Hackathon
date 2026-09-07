@@ -21,15 +21,6 @@ export class ThemeService {
       this.applyTheme(theme);
     });
 
-    // Listen to system preference changes if user hasn't explicitly set preference
-    if (typeof window !== 'undefined' && window.matchMedia) {
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-        const stored = localStorage.getItem(this.STORAGE_KEY);
-        if (!stored) {
-          this.setTheme(e.matches ? 'dark' : 'light', false);
-        }
-      });
-    }
   }
 
   toggleTheme(): void {
@@ -50,13 +41,9 @@ export class ThemeService {
       if (stored === 'light' || stored === 'dark') {
         return stored;
       }
-
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
-      }
     }
-    // Default to enterprise dark mode for cutting-edge fintech feel
-    return 'dark';
+    // Default to clean light mode
+    return 'light';
   }
 
   private applyTheme(theme: ThemeMode): void {
