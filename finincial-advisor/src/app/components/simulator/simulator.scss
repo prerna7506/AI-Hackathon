@@ -280,6 +280,30 @@
   flex-direction: column;
   gap: 18px;
   width: 100%;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+
+  &.disabled-controls {
+    opacity: 0.55;
+    pointer-events: none;
+    user-select: none;
+    cursor: not-allowed;
+    filter: grayscale(0.2);
+
+    button, input {
+      cursor: not-allowed !important;
+      pointer-events: none;
+    }
+  }
+}
+
+.scenario-btn:disabled,
+.btn-demo:disabled,
+.btn-reset:disabled,
+.param-number-input:disabled,
+.param-range-slider:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
 }
 
 .card {

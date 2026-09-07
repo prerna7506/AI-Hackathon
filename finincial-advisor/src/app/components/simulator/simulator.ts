@@ -110,6 +110,7 @@ export class SimulatorComponent implements OnDestroy {
   }
 
   selectScenario(id: string): void {
+    if (this.isAnalyzing) return;
     this.scenarios.forEach(sc => sc.selected = (sc.id === id));
     this.reportData = null;
     this.analysisResult = null;
@@ -120,6 +121,7 @@ export class SimulatorComponent implements OnDestroy {
   }
 
   resetParameters(): void {
+    if (this.isAnalyzing) return;
     this.monthlyExpenses = 0;
     this.jobLossMonths = 0;
     this.medicalBill = 0;
@@ -135,6 +137,7 @@ export class SimulatorComponent implements OnDestroy {
   }
 
   loadDemoPreset(): void {
+    if (this.isAnalyzing) return;
     this.monthlyExpenses = 65000;
     this.jobLossMonths = 6;
     this.medicalBill = 450000;

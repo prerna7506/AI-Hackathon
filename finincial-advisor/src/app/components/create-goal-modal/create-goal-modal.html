@@ -13,17 +13,32 @@
       </div>
 
       <!-- Form Body -->
-      <form class="modal-body" (ngSubmit)="onSubmit()">
+      <form class="modal-body" (ngSubmit)="onSubmit()" novalidate>
         <!-- Goal Title -->
-        <div class="form-group">
-          <label>Goal Name</label>
+        <div class="form-group" [class.has-error]="submitted() && titleError()">
+          <label for="goalTitleInput">
+            Goal Name <span class="required-star">*</span>
+          </label>
           <input 
+            id="goalTitleInput"
             type="text" 
             placeholder="e.g. Buy a Car, European Trip, Kids College" 
             [(ngModel)]="title" 
+            (ngModelChange)="onTitleChange()"
             name="title" 
-            required 
+            [class.input-error]="submitted() && titleError()"
+            autocomplete="off"
           />
+          @if (submitted() && titleError()) {
+            <div class="field-error-msg">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span>{{ titleError() }}</span>
+            </div>
+          }
         </div>
 
         <!-- Category / Icon Selection Grid -->
@@ -58,15 +73,30 @@
 
         <!-- Amounts Row -->
         <div class="form-row">
-          <div class="form-group flex-1">
-            <label>Target Amount (₹)</label>
+          <div class="form-group flex-1" [class.has-error]="submitted() && targetAmountError()">
+            <label for="goalTargetInput">
+              Target Amount (₹) <span class="required-star">*</span>
+            </label>
             <input 
+              id="goalTargetInput"
               type="number" 
               placeholder="e.g. 1000000" 
               [(ngModel)]="targetAmount" 
+              (ngModelChange)="onTargetAmountChange()"
               name="targetAmount" 
-              required 
+              min="1"
+              [class.input-error]="submitted() && targetAmountError()"
             />
+            @if (submitted() && targetAmountError()) {
+              <div class="field-error-msg">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span>{{ targetAmountError() }}</span>
+              </div>
+            }
           </div>
 
           <div class="form-group flex-1">

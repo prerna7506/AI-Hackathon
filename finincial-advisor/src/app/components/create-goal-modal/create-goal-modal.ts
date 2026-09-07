@@ -20,6 +20,11 @@ export class CreateGoalModalComponent {
   selectedIcon: 'house' | 'car' | 'flight' | 'graduation' | 'retirement' | 'shield' = 'car';
   isSaving = signal(false);
 
+  // Validation
+  submitted = signal(false);
+  titleError = signal<string | null>(null);
+  targetAmountError = signal<string | null>(null);
+
   iconOptions = [
     { id: 'car', label: 'Car Purchase' },
     { id: 'house', label: 'Real Estate' },
@@ -31,7 +36,44 @@ export class CreateGoalModalComponent {
 
   close(): void {
     if (this.isSaving()) return;
+    this.resetValidation();
     this.goalsService.closeModal();
+  }
+
+  onTitleChange(): void {
+    if (this.submitted()) {
+      this.validateTitle();
+    }
+  }
+
+  onTargetAmountChange(): void {
+    if (this.submitted()) {
+      this.validateTargetAmount();
+    }
+  }
+
+  validateTitle(): boolean {
+    if (!this.title || !this.title.trim()) {
+      this.titleError.set('Goal Name is required. Please enter a name for your goal.');
+      return false;
+    }
+    this.titleError.set(null);
+    return true;
+  }
+
+  validateTargetAmount(): boolean {
+    if (this.targetAmount === null || this.targetAmount === undefined || isNaN(this.targetAmount) || this.targetAmount <= 0) {
+      this.targetAmountError.set('Please enter a target amount greater than ₹0.');
+      return false;
+    }
+    this.targetAmountError.set(null);
+    return true;
+  }
+
+  private resetValidation(): void {
+    this.submitted.set(false);
+    this.titleError.set(null);
+    this.targetAmountError.set(null);
   }
 
   private iconColorMap: Record<string, string> = {
@@ -44,7 +86,14 @@ export class CreateGoalModalComponent {
   };
 
   async onSubmit(): Promise<void> {
-    if (!this.title.trim() || !this.targetAmount) return;
+    this.submitted.set(true);
+
+    const isTitleValid = this.validateTitle();
+    const isTargetValid = this.validateTargetAmount();
+
+    if (!isTitleValid || !isTargetValid) {
+      return;
+    }
 
     this.isSaving.set(true);
 
@@ -54,8 +103,8 @@ export class CreateGoalModalComponent {
     try {
       await this.goalsService.addGoal({
         title: this.title.trim(),
-        targetAmount: this.targetAmount,
-        currentAmount: this.startingAmount || 0,
+        targetAmount: Number(this.targetAmount),
+        currentAmount: Number(this.startingAmount) || 0,
         timelineYears: this.timelineYears || 3,
         targetYear: targetYear,
         icon: this.selectedIcon,
@@ -69,6 +118,7 @@ export class CreateGoalModalComponent {
       this.startingAmount = 250000;
       this.timelineYears = 3;
       this.selectedIcon = 'car';
+      this.resetValidation();
     } finally {
       this.isSaving.set(false);
     }

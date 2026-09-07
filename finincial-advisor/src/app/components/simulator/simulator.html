@@ -51,7 +51,7 @@
     <!-- 2-Column Simulator Layout (Left: Controls, Right: Analysis Result) -->
     <div class="simulator-grid-layout">
       <!-- Left Column: Controls & Parameters -->
-      <div class="controls-column">
+      <div class="controls-column" [class.disabled-controls]="isAnalyzing">
         <!-- Quick Scenarios Card -->
         <div class="card scenarios-card">
           <div class="card-header-row">
@@ -64,6 +64,7 @@
               <button 
                 class="scenario-btn" 
                 [class.selected]="sc.selected"
+                [disabled]="isAnalyzing"
                 (click)="selectScenario(sc.id)"
               >
                 <div class="btn-left">
@@ -90,16 +91,16 @@
           </div>
         </div>
 
-        <!-- Base Parameters Sliders Card with Dual Slider/Input Physics -->
+        <!-- Base Parameters Sliders Card with Direct Number Inputs -->
         <div class="card sliders-card">
           <div class="sliders-header">
             <div>
               <h4 class="card-section-title">TUNABLE PARAMETERS</h4>
-              <span class="sliders-subtitle">Drag sliders or type values for {{ selectedScenario.title }}</span>
+              <span class="sliders-subtitle">Enter values for {{ selectedScenario.title }}</span>
             </div>
             <div class="sliders-actions">
-              <button class="btn-demo" (click)="loadDemoPreset()" title="Populate Demo Financial Profile">Demo Preset</button>
-              <button class="btn-reset" (click)="resetParameters()" title="Reset all to 0">Reset</button>
+              <button class="btn-demo" [disabled]="isAnalyzing" (click)="loadDemoPreset()" title="Populate Demo Financial Profile">Demo Preset</button>
+              <button class="btn-reset" [disabled]="isAnalyzing" (click)="resetParameters()" title="Reset all to 0">Reset</button>
             </div>
           </div>
 
@@ -121,21 +122,13 @@
                       type="number" 
                       class="param-number-input" 
                       [(ngModel)]="monthlyExpenses" 
+                      [disabled]="isAnalyzing"
                       min="0" 
                       max="500000"
                       step="5000"
                     />
                   </div>
                 </div>
-                <input 
-                  type="range" 
-                  class="param-range-slider" 
-                  [(ngModel)]="monthlyExpenses" 
-                  min="10000" 
-                  max="300000" 
-                  step="5000"
-                  [style.--fill-pct]="getSliderPercentage(monthlyExpenses, 300000) + '%'"
-                />
               </div>
 
               <!-- Job Loss Duration -->
@@ -147,6 +140,7 @@
                       type="number" 
                       class="param-number-input duration-input" 
                       [(ngModel)]="jobLossMonths" 
+                      [disabled]="isAnalyzing"
                       min="1" 
                       max="36" 
                       step="1"
@@ -154,15 +148,6 @@
                     <span class="unit-suffix">Months</span>
                   </div>
                 </div>
-                <input 
-                  type="range" 
-                  class="param-range-slider range-amber" 
-                  [(ngModel)]="jobLossMonths" 
-                  min="1" 
-                  max="24" 
-                  step="1"
-                  [style.--fill-pct]="getSliderPercentage(jobLossMonths, 24) + '%'"
-                />
               </div>
             }
 
@@ -178,21 +163,13 @@
                       type="number" 
                       class="param-number-input" 
                       [(ngModel)]="medicalBill" 
+                      [disabled]="isAnalyzing"
                       min="0" 
                       max="2500000"
                       step="25000"
                     />
                   </div>
                 </div>
-                <input 
-                  type="range" 
-                  class="param-range-slider range-danger" 
-                  [(ngModel)]="medicalBill" 
-                  min="50000" 
-                  max="2000000" 
-                  step="25000"
-                  [style.--fill-pct]="getSliderPercentage(medicalBill, 2000000) + '%'"
-                />
               </div>
 
               <!-- Health Insurance Cover -->
@@ -205,21 +182,13 @@
                       type="number" 
                       class="param-number-input" 
                       [(ngModel)]="insurance" 
+                      [disabled]="isAnalyzing"
                       min="0" 
                       max="3000000"
                       step="50000"
                     />
                   </div>
                 </div>
-                <input 
-                  type="range" 
-                  class="param-range-slider range-emerald" 
-                  [(ngModel)]="insurance" 
-                  min="0" 
-                  max="2500000" 
-                  step="50000"
-                  [style.--fill-pct]="getSliderPercentage(insurance, 2500000) + '%'"
-                />
               </div>
 
               <!-- Monthly Expenses -->
@@ -232,21 +201,13 @@
                       type="number" 
                       class="param-number-input" 
                       [(ngModel)]="monthlyExpenses" 
+                      [disabled]="isAnalyzing"
                       min="0" 
                       max="500000"
                       step="5000"
                     />
                   </div>
                 </div>
-                <input 
-                  type="range" 
-                  class="param-range-slider" 
-                  [(ngModel)]="monthlyExpenses" 
-                  min="10000" 
-                  max="300000" 
-                  step="5000"
-                  [style.--fill-pct]="getSliderPercentage(monthlyExpenses, 300000) + '%'"
-                />
               </div>
             }
 
@@ -265,21 +226,13 @@
                     type="number" 
                     class="param-number-input" 
                     [(ngModel)]="savingsBankBalance" 
+                    [disabled]="isAnalyzing"
                     min="0" 
                     max="2000000"
                     step="10000"
                   />
                 </div>
               </div>
-              <input 
-                type="range" 
-                class="param-range-slider range-blue" 
-                [(ngModel)]="savingsBankBalance" 
-                min="0" 
-                max="1000000" 
-                step="10000"
-                [style.--fill-pct]="getSliderPercentage(savingsBankBalance, 1000000) + '%'"
-              />
             </div>
 
             <!-- Liquid Fund -->
@@ -292,21 +245,13 @@
                     type="number" 
                     class="param-number-input" 
                     [(ngModel)]="liquidFund" 
+                    [disabled]="isAnalyzing"
                     min="0" 
                     max="3000000"
                     step="25000"
                   />
                 </div>
               </div>
-              <input 
-                type="range" 
-                class="param-range-slider range-emerald" 
-                [(ngModel)]="liquidFund" 
-                min="0" 
-                max="1500000" 
-                step="25000"
-                [style.--fill-pct]="getSliderPercentage(liquidFund, 1500000) + '%'"
-              />
             </div>
 
             <!-- FD Investment -->
@@ -319,21 +264,13 @@
                     type="number" 
                     class="param-number-input" 
                     [(ngModel)]="fdInvestment" 
+                    [disabled]="isAnalyzing"
                     min="0" 
                     max="3000000"
                     step="25000"
                   />
                 </div>
               </div>
-              <input 
-                type="range" 
-                class="param-range-slider range-amber" 
-                [(ngModel)]="fdInvestment" 
-                min="0" 
-                max="2000000" 
-                step="25000"
-                [style.--fill-pct]="getSliderPercentage(fdInvestment, 2000000) + '%'"
-              />
             </div>
 
             <!-- Market & Gold Collapsible Summary -->
@@ -342,58 +279,18 @@
                 <span class="mini-label">Gold Holdings</span>
                 <div class="param-input-wrap">
                   <span class="currency-prefix">₹</span>
-                  <input type="number" class="param-number-input" [(ngModel)]="goldInvestment" min="0" step="25000" />
+                  <input type="number" class="param-number-input" [(ngModel)]="goldInvestment" [disabled]="isAnalyzing" min="0" step="25000" />
                 </div>
               </div>
               <div class="growth-input-col">
                 <span class="mini-label">Market Equities</span>
                 <div class="param-input-wrap">
                   <span class="currency-prefix">₹</span>
-                  <input type="number" class="param-number-input" [(ngModel)]="marketInvestment" min="0" step="50000" />
+                  <input type="number" class="param-number-input" [(ngModel)]="marketInvestment" [disabled]="isAnalyzing" min="0" step="50000" />
                 </div>
               </div>
             </div>
 
-          </div>
-        </div>
-
-        <!-- 3D Liquidity Waterfall Hierarchy Card -->
-        <div class="card waterfall-card">
-          <div class="waterfall-header">
-            <span class="wf-icon">🌊</span>
-            <div>
-              <h4 class="card-section-title">LIQUIDITY DEFENSE HIERARCHY</h4>
-              <span class="wf-subtitle">Order of fund absorption during a crisis</span>
-            </div>
-          </div>
-
-          <div class="waterfall-levels">
-            <div class="wf-level level-1">
-              <div class="wf-bar-fill"></div>
-              <div class="wf-meta">
-                <span class="level-tag">Tier 1 • Instant Cash</span>
-                <strong class="level-val">₹{{ immediateLiquidCash | number }}</strong>
-              </div>
-              <span class="level-sub">Bank Savings + Liquid Funds (Zero Exit Penalty)</span>
-            </div>
-
-            <div class="wf-level level-2">
-              <div class="wf-bar-fill"></div>
-              <div class="wf-meta">
-                <span class="level-tag">Tier 2 • Safe Reserves</span>
-                <strong class="level-val">₹{{ fdInvestment | number }}</strong>
-              </div>
-              <span class="level-sub">Fixed Deposits (Minor premature interest penalty)</span>
-            </div>
-
-            <div class="wf-level level-3">
-              <div class="wf-bar-fill"></div>
-              <div class="wf-meta">
-                <span class="level-tag">Tier 3 • Shielded Growth</span>
-                <strong class="level-val">₹{{ (goldInvestment + marketInvestment) | number }}</strong>
-              </div>
-              <span class="level-sub">Gold & Equities (Protected from distress sales)</span>
-            </div>
           </div>
         </div>
       </div>
