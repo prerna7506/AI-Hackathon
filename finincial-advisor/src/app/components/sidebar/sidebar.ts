@@ -35,7 +35,7 @@ export class SidebarComponent {
   }
 
   navItems: NavItem[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: 'grid', route: '/dashboard' },
+    { id: 'dashboard', label: 'Overview', icon: 'grid', route: '/dashboard' },
     { id: 'advisor', label: 'AI Advisor', icon: 'bot', route: '/ai-advisor' },
     { id: 'goals', label: 'Goals', icon: 'flag', route: '/goals' },
     { id: 'simulator', label: 'Simulator', icon: 'trending', route: '/simulator' }
