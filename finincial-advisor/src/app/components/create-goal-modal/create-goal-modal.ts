@@ -98,18 +98,44 @@ export class CreateGoalModalComponent {
     this.isSaving.set(true);
 
     const currentYear = new Date().getFullYear();
-    const targetYear = currentYear + (this.timelineYears || 3);
+    const timeline = this.timelineYears || 3;
+    const targetYear = currentYear + timeline;
+
+    const smartAlloc = this.goalsService.calculateSmartAllocation({
+      timelineYears: timeline,
+      icon: this.selectedIcon
+    });
+
+    const tempGoalItem = {
+      id: 'temp',
+      title: this.title.trim(),
+      targetAmount: Number(this.targetAmount),
+      currentAmount: Number(this.startingAmount) || 0,
+      timelineYears: timeline,
+      targetYear: targetYear,
+      icon: this.selectedIcon,
+      status: 'On Track',
+      equityAllocation: smartAlloc.equity,
+      debtAllocation: smartAlloc.debt,
+      liquidAllocation: smartAlloc.liquid
+    };
+
+    const financials = this.goalsService.calculateGoalFinancials(tempGoalItem);
 
     try {
       await this.goalsService.addGoal({
         title: this.title.trim(),
         targetAmount: Number(this.targetAmount),
         currentAmount: Number(this.startingAmount) || 0,
-        timelineYears: this.timelineYears || 3,
+        timelineYears: timeline,
         targetYear: targetYear,
         icon: this.selectedIcon,
         isPrimary: false,
-        color: this.iconColorMap[this.selectedIcon] || 'var(--color-primary)'
+        color: this.iconColorMap[this.selectedIcon] || 'var(--color-primary)',
+        equityAllocation: smartAlloc.equity,
+        debtAllocation: smartAlloc.debt,
+        liquidAllocation: smartAlloc.liquid,
+        monthlyBoost: financials.recommendedMonthlyBoost
       });
 
       // Reset form

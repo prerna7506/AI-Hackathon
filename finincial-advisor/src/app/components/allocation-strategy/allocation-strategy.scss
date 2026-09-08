@@ -11,25 +11,77 @@
 
   .card-header {
     display: flex;
+    justify-content: space-between;
     align-items: flex-start;
     gap: 12px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 
-    .header-icon {
-      margin-top: 2px;
-      color: var(--color-primary);
+    .header-left-group {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
 
-      svg {
-        stroke: var(--color-primary);
+      .header-icon {
+        margin-top: 2px;
+        color: var(--color-primary);
+
+        svg {
+          stroke: var(--color-primary);
+        }
+      }
+
+      .header-text {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .card-title {
+          font-size: 1.05rem;
+          font-weight: 800;
+          color: var(--text-main);
+          line-height: 1.25;
+          letter-spacing: -0.3px;
+          margin: 0;
+        }
+
+        .strategy-badge {
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: var(--color-primary);
+          background: var(--color-primary-light);
+          padding: 2px 8px;
+          border-radius: 6px;
+          align-self: flex-start;
+          display: inline-block;
+        }
       }
     }
 
-    .card-title {
-      font-size: 1.1rem;
-      font-weight: 800;
+    .btn-toggle-edit {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: 1px solid var(--border-card);
+      background: var(--bg-subtle);
       color: var(--text-main);
-      line-height: 1.25;
-      letter-spacing: -0.3px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: var(--color-primary-light);
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+      }
+
+      &.active {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: #FFFFFF;
+      }
     }
   }
 
@@ -80,4 +132,194 @@
       }
     }
   }
+
+  /* Interactive Edit Form */
+  .allocation-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    animation: fadeIn 0.2s ease;
+
+    .presets-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+
+      .presets-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+      }
+
+      .preset-chip {
+        background: var(--bg-subtle);
+        border: 1px solid var(--border-card);
+        border-radius: 6px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--text-main);
+        padding: 3px 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: var(--color-primary-light);
+          border-color: var(--color-primary);
+          color: var(--color-primary);
+        }
+      }
+    }
+
+    .edit-inputs-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      .edit-input-row {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        .input-label-col {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 0.78rem;
+
+          strong {
+            font-weight: 800;
+          }
+
+          span {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+          }
+        }
+
+        .input-control-col {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          .alloc-num-input {
+            width: 60px;
+            padding: 5px 8px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            border-radius: 6px;
+            border: 1.5px solid var(--border-card);
+            background: var(--bg-card);
+            color: var(--text-main);
+            text-align: right;
+
+            &:focus {
+              outline: none;
+              border-color: var(--color-primary);
+              box-shadow: 0 0 0 2px var(--color-primary-light);
+            }
+          }
+
+          .percent-unit {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--text-muted);
+          }
+
+          .alloc-slider {
+            flex: 1;
+            height: 6px;
+            border-radius: 99px;
+            cursor: pointer;
+
+            &.slider-equity {
+              accent-color: var(--color-equity, #10B981);
+            }
+            &.slider-debt {
+              accent-color: var(--color-debt, #06B6D4);
+            }
+            &.slider-liquid {
+              accent-color: var(--color-liquid, #F59E0B);
+            }
+          }
+        }
+      }
+    }
+
+    .total-status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+
+      &.valid {
+        background: var(--color-mint-bg, rgba(16, 185, 129, 0.1));
+        color: var(--color-mint-text, #059669);
+        border: 1px solid var(--color-mint-border, rgba(16, 185, 129, 0.2));
+      }
+
+      &.invalid {
+        background: var(--color-danger-bg, rgba(239, 68, 68, 0.1));
+        color: var(--color-danger-text, #DC2626);
+        border: 1px solid var(--color-danger-border, rgba(239, 68, 68, 0.2));
+      }
+    }
+
+    .error-text-msg {
+      font-size: 0.74rem;
+      color: #DC2626;
+      font-weight: 600;
+    }
+
+    .edit-actions-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+
+      button {
+        padding: 7px 14px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .btn-cancel-edit {
+        background: var(--bg-subtle);
+        border: 1px solid var(--border-card);
+        color: var(--text-muted);
+
+        &:hover {
+          background: var(--bg-card-hover);
+          color: var(--text-main);
+        }
+      }
+
+      .btn-save-edit {
+        background: var(--color-primary);
+        border: none;
+        color: #FFFFFF;
+
+        &:hover:not(:disabled) {
+          background: var(--color-primary-hover);
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }

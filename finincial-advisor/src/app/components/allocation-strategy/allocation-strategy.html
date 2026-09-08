@@ -1,31 +1,179 @@
 <div class="allocation-card">
   <div class="card-header">
-    <div class="header-icon">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M12 2a10 10 0 0 1 10 10h-10V2z"/>
-      </svg>
+    <div class="header-left-group">
+      <div class="header-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 2a10 10 0 0 1 10 10h-10V2z"/>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h3 class="card-title">AI Allocation Strategy</h3>
+        <span class="strategy-badge">{{ riskProfile() }}</span>
+      </div>
     </div>
-    <h3 class="card-title">AI Allocation<br>Strategy</h3>
+    <button 
+      class="btn-toggle-edit" 
+      [class.active]="isEditing()" 
+      (click)="toggleEdit()"
+      title="Customize allocation percentages"
+    >
+      @if (isEditing()) {
+        <span>Close</span>
+      } @else {
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        <span>Set / Type %</span>
+      }
+    </button>
   </div>
 
-  <div class="allocation-list">
-    @for (item of allocations(); track item.name) {
-      <div class="allocation-item">
-        <div class="item-meta">
-          <span class="item-name">
-            <strong>{{ item.name }}</strong> {{ item.subtitle }}
-          </span>
-          <span class="item-percent">{{ item.percentage }}%</span>
+  @if (!isEditing()) {
+    <div class="allocation-list">
+      @for (item of allocations(); track item.name) {
+        <div class="allocation-item">
+          <div class="item-meta">
+            <span class="item-name">
+              <strong>{{ item.name }}</strong> {{ item.subtitle }}
+            </span>
+            <span class="item-percent">{{ item.percentage }}%</span>
+          </div>
+          <div class="item-track">
+            <div 
+              class="item-fill" 
+              [style.width.%]="item.percentage" 
+              [style.background]="item.color"
+            ></div>
+          </div>
         </div>
-        <div class="item-track">
-          <div 
-            class="item-fill" 
-            [style.width.%]="item.percentage" 
-            [style.background]="item.color"
-          ></div>
+      }
+    </div>
+  } @else {
+    <div class="allocation-edit-form">
+      <div class="presets-row">
+        <span class="presets-label">Presets:</span>
+        <button type="button" class="preset-chip" (click)="setPreset(50, 40, 10)">50/40/10</button>
+        <button type="button" class="preset-chip" (click)="setPreset(70, 25, 5)">70/25/5</button>
+        <button type="button" class="preset-chip" (click)="setPreset(30, 50, 20)">30/50/20</button>
+        <button type="button" class="preset-chip" (click)="setPreset(10, 30, 60)">10/30/60</button>
+      </div>
+
+      <div class="edit-inputs-list">
+        <!-- Equity Input -->
+        <div class="edit-input-row">
+          <div class="input-label-col">
+            <strong style="color: var(--color-equity)">Equity</strong>
+            <span>(High Growth)</span>
+          </div>
+          <div class="input-control-col">
+            <input 
+              type="number" 
+              min="0" 
+              max="100" 
+              step="5"
+              [ngModel]="customEquity()" 
+              (ngModelChange)="customEquity.set($event)"
+              class="alloc-num-input"
+            />
+            <span class="percent-unit">%</span>
+            <input 
+              type="range" 
+              min="0" 
+              max="100" 
+              step="5"
+              [ngModel]="customEquity()" 
+              (ngModelChange)="customEquity.set(+$event)"
+              class="alloc-slider slider-equity"
+            />
+          </div>
+        </div>
+
+        <!-- Debt Input -->
+        <div class="edit-input-row">
+          <div class="input-label-col">
+            <strong style="color: var(--color-debt)">Debt</strong>
+            <span>(Stability)</span>
+          </div>
+          <div class="input-control-col">
+            <input 
+              type="number" 
+              min="0" 
+              max="100" 
+              step="5"
+              [ngModel]="customDebt()" 
+              (ngModelChange)="customDebt.set($event)"
+              class="alloc-num-input"
+            />
+            <span class="percent-unit">%</span>
+            <input 
+              type="range" 
+              min="0" 
+              max="100" 
+              step="5"
+              [ngModel]="customDebt()" 
+              (ngModelChange)="customDebt.set(+$event)"
+              class="alloc-slider slider-debt"
+            />
+          </div>
+        </div>
+
+        <!-- Liquid Input -->
+        <div class="edit-input-row">
+          <div class="input-label-col">
+            <strong style="color: var(--color-liquid)">Liquid</strong>
+            <span>(Emergency)</span>
+          </div>
+          <div class="input-control-col">
+            <input 
+              type="number" 
+              min="0" 
+              max="100" 
+              step="5"
+              [ngModel]="customLiquid()" 
+              (ngModelChange)="customLiquid.set($event)"
+              class="alloc-num-input"
+            />
+            <span class="percent-unit">%</span>
+            <input 
+              type="range" 
+              min="0" 
+              max="100" 
+              step="5"
+              [ngModel]="customLiquid()" 
+              (ngModelChange)="customLiquid.set(+$event)"
+              class="alloc-slider slider-liquid"
+            />
+          </div>
         </div>
       </div>
-    }
-  </div>
+
+      <!-- Total Allocation Validation Bar -->
+      <div class="total-status-bar" [class.valid]="totalCustomPercentage() === 100" [class.invalid]="totalCustomPercentage() !== 100">
+        <span>Total: <strong>{{ totalCustomPercentage() }}%</strong></span>
+        @if (totalCustomPercentage() === 100) {
+          <span class="status-msg">✓ 100% Balanced</span>
+        } @else {
+          <span class="status-msg">⚠️ Sum must be 100% ({{ 100 - totalCustomPercentage() > 0 ? '+' + (100 - totalCustomPercentage()) + '% needed' : (totalCustomPercentage() - 100) + '% excess' }})</span>
+        }
+      </div>
+
+      @if (errorMessage()) {
+        <div class="error-text-msg">{{ errorMessage() }}</div>
+      }
+
+      <div class="edit-actions-row">
+        <button type="button" class="btn-cancel-edit" (click)="cancelEdit()">Cancel</button>
+        <button 
+          type="button" 
+          class="btn-save-edit" 
+          [disabled]="totalCustomPercentage() !== 100"
+          (click)="saveAllocation()"
+        >
+          Save for AI
+        </button>
+      </div>
+    </div>
+  }
 </div>
