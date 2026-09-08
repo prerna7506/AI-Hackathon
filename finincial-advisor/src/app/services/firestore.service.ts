@@ -69,6 +69,7 @@ export interface GoalItem {
   isPrimary?: boolean;
   color?: string;
   monthlyBoost?: number;
+  monthlySavings?: number;
   strategy?: string;
   recommendationResponse?: string;
   allocationRisk?: string;

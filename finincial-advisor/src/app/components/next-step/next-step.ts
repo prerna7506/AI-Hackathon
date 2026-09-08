@@ -34,25 +34,27 @@ export class NextStepComponent {
   recommendationText = computed(() => {
     const goal = this.primaryGoal();
     const timeline = goal?.timelineYears || this.financials().timelineYears || 5;
-    return `To stay on track for your ${timeline}-year timeline, FinMate AI recommends optimizing your monthly contributions.`;
+    if (this.isApplied()) {
+      return `Monthly contributions optimized for your ${timeline}-year milestone based on FinMate AI analysis.`;
+    }
+    return `Generate customized monthly savings and asset allocation recommendations for your ${timeline}-year goal.`;
   });
 
   highlightText = computed(() => {
     const goal = this.primaryGoal();
-    const fin = this.financials();
-    const currentBoost = goal?.monthlyBoost || fin.recommendedMonthlyBoost;
+    const currentBoost = goal?.monthlyBoost || 0;
 
-    if (goal?.monthlyBoost && this.isApplied()) {
+    if (this.isApplied() && currentBoost > 0) {
       return `Monthly contribution optimized (+₹${currentBoost.toLocaleString('en-IN')}/mo active)`;
     }
-    return `Increase monthly savings by ₹${currentBoost.toLocaleString('en-IN')}.`;
+    return `AI Optimization Pending — Click below to generate recommendation`;
   });
 
   targetDetailsText = computed(() => {
     const goal = this.primaryGoal();
     const fin = this.financials();
     if (!goal) return '';
-    return `Target: ₹${goal.targetAmount.toLocaleString('en-IN')} by ${goal.targetYear} • Est. SIP: ₹${fin.requiredMonthlySavings.toLocaleString('en-IN')}/mo`;
+    return `Target: ₹${goal.targetAmount.toLocaleString('en-IN')} by ${goal.targetYear} • Remaining Gap: ₹${fin.remainingAmount.toLocaleString('en-IN')} (over ${fin.timelineYears} yrs)`;
   });
 
   constructor() {

@@ -27,7 +27,9 @@
             <div class="banner-badge">Target: ₹{{ goal.targetAmount.toLocaleString('en-IN') }}</div>
             <div class="banner-saved">Saved: ₹{{ goal.currentAmount.toLocaleString('en-IN') }}</div>
             <div class="banner-timeline">{{ goal.timelineYears }} Yrs ({{ goal.targetYear }})</div>
-            <div class="banner-boost">+₹{{ boostAmount().toLocaleString('en-IN') }}/mo</div>
+            @if (recommendationResult() && boostAmount() > 0) {
+              <div class="banner-boost">+₹{{ boostAmount().toLocaleString('en-IN') }}/mo</div>
+            }
           </div>
         }
 
@@ -101,36 +103,13 @@
             <!-- Optional Parameter Customization Box -->
             @if (showCustomParams()) {
               <div class="modal-params-adjust-card">
-                <h5 class="params-title">Customize Inputs Before AI Analysis</h5>
+                <h5 class="params-title">Customize Asset Allocation (Risk Preference)</h5>
                 
-                <div class="params-grid">
-                  <!-- Monthly Boost Control -->
-                  <div class="param-box">
-                    <label>Monthly Boost Amount</label>
-                    <div class="param-input-wrap">
-                      <span class="prefix">₹</span>
-                      <input 
-                        type="number" 
-                        min="500" 
-                        step="500" 
-                        [ngModel]="boostAmount()" 
-                        (ngModelChange)="boostAmount.set($event)"
-                        class="modal-num-input"
-                      />
-                      <span class="suffix">/mo</span>
-                    </div>
-                    <div class="param-chips">
-                      <button type="button" (click)="setBoostPreset(3000)">₹3k</button>
-                      <button type="button" (click)="setBoostPreset(5000)">₹5k</button>
-                      <button type="button" (click)="setBoostPreset(6000)">₹6k</button>
-                      <button type="button" (click)="setBoostPreset(10000)">₹10k</button>
-                    </div>
-                  </div>
-
+                <div class="params-grid single-col">
                   <!-- Allocation Control -->
                   <div class="param-box">
                     <div class="alloc-label-row">
-                      <label>Asset Allocation</label>
+                      <label>Target Asset Allocation (Risk Profile)</label>
                       <span class="alloc-total-tag" [class.error]="totalAllocation() !== 100">Total: {{ totalAllocation() }}%</span>
                     </div>
                     <div class="modal-alloc-inputs">
@@ -153,6 +132,7 @@
                     <div class="param-chips">
                       <button type="button" (click)="setAllocPreset(50, 40, 10)">50/40/10</button>
                       <button type="button" (click)="setAllocPreset(70, 25, 5)">70/25/5</button>
+                      <button type="button" (click)="setAllocPreset(90, 10, 0)">90/10/0</button>
                       <button type="button" (click)="setAllocPreset(30, 50, 20)">30/50/20</button>
                       <button type="button" (click)="setAllocPreset(10, 30, 60)">10/30/60</button>
                     </div>
@@ -166,7 +146,7 @@
                   (click)="runAnalysis()"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                  <span>Re-run AI Analysis with Typed Parameters</span>
+                  <span>Re-run AI Analysis with Allocation</span>
                 </button>
               </div>
             }

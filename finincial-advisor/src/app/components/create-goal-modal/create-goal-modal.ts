@@ -135,7 +135,7 @@ export class CreateGoalModalComponent {
         equityAllocation: smartAlloc.equity,
         debtAllocation: smartAlloc.debt,
         liquidAllocation: smartAlloc.liquid,
-        monthlyBoost: financials.recommendedMonthlyBoost
+        monthlyBoost: 0
       });
 
       // Reset form

@@ -364,7 +364,9 @@ Recommended Monthly Savings Increase: ₹${dynamicBoost.toLocaleString('en-IN')}
     alloc?: { equity: number; debt: number; liquid: number }
   ): Observable<{ replyText: string; rawResponse: any }> {
     const dynamicFinancials = this.calculateGoalFinancials(goal);
-    const resolvedBoost = boostAmount ?? dynamicFinancials.recommendedMonthlyBoost;
+    const resolvedBoost = boostAmount && boostAmount > 0 
+      ? boostAmount 
+      : dynamicFinancials.recommendedMonthlyBoost;
     const resolvedAlloc = alloc || this.calculateSmartAllocation(goal);
 
     const formattedPayload = this.buildGoalInformationString(goal, resolvedBoost, resolvedAlloc);

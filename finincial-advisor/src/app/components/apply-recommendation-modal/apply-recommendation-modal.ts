@@ -70,7 +70,7 @@ export class ApplyRecommendationModalComponent {
           // Initialize dynamic boost and allocation from goal metrics
           const dynamicBoost = goal.monthlyBoost && goal.monthlyBoost > 0
             ? goal.monthlyBoost
-            : fin.recommendedMonthlyBoost;
+            : 0;
           this.boostAmount.set(dynamicBoost);
           this.customEquity.set(alloc.equity);
           this.customDebt.set(alloc.debt);
@@ -81,6 +81,7 @@ export class ApplyRecommendationModalComponent {
             this.viewMode.set('result');
             this.isApplying.set(false);
           } else {
+            this.recommendationResult.set(null);
             this.runAnalysis();
           }
         }
@@ -104,14 +105,50 @@ export class ApplyRecommendationModalComponent {
 
   close(): void {
     this.errorMessage.set(null);
+    this.recommendationResult.set(null);
+    this.showCustomParams.set(false);
     this.goalsService.closeRecommendationModal();
+  }
+
+  /**
+   * Helper to parse AI recommended monthly boost from workflow text response
+   */
+  private extractAiBoostAmount(text: string): number | null {
+    if (!text) return null;
+    
+    // 1. Matches: Recommended Monthly Increase: ₹25,000 or +₹25,000
+    const boostMatch = text.match(/(?:Recommended Monthly Increase|Monthly Increase|Monthly Action)[^0-9\r\n]*([0-9,]+)/i);
+    if (boostMatch) {
+      const num = parseInt(boostMatch[1].replace(/,/g, ''), 10);
+      if (!isNaN(num) && num > 0) return num;
+    }
+
+    // 2. Matches: Increase monthly savings by INR 25,000 or ₹25,000
+    const actionMatch = text.match(/Increase\s+(?:your\s+)?monthly\s+savings\s+by\s+(?:INR|₹)?\s*([0-9,]+)/i);
+    if (actionMatch) {
+      const num = parseInt(actionMatch[1].replace(/,/g, ''), 10);
+      if (!isNaN(num) && num > 0) return num;
+    }
+
+    // 3. Matches: +₹25,000 / mo or +₹25,000/mo
+    const plusMatch = text.match(/\+\s*(?:INR|₹)?\s*([0-9,]+)\s*(?:\/|\s*per)\s*mo/i);
+    if (plusMatch) {
+      const num = parseInt(plusMatch[1].replace(/,/g, ''), 10);
+      if (!isNaN(num) && num > 0) return num;
+    }
+
+    return null;
   }
 
   runAnalysis(): void {
     const goal = this.activeGoal();
     if (!goal) return;
 
-    const currentBoost = this.boostAmount();
+    // Reset old recommendation state completely before analyzing
+    this.recommendationResult.set(null);
+    this.showCustomParams.set(false);
+
+    const currentBoost = goal.monthlyBoost && goal.monthlyBoost > 0 ? goal.monthlyBoost : 0;
     const alloc = this.currentAllocation();
 
     this.isApplying.set(true);
@@ -139,10 +176,19 @@ export class ApplyRecommendationModalComponent {
           this.recommendationResult.set(res.replyText);
           this.viewMode.set('result');
 
-          // Cache recommendation response
+          // Extract dynamic AI boost from the agent's response text if present
+          const parsedAiBoost = this.extractAiBoostAmount(res.replyText);
+          const effectiveBoost = (parsedAiBoost && parsedAiBoost > 0)
+            ? parsedAiBoost
+            : (currentBoost > 0 ? currentBoost : this.financials().recommendedMonthlyBoost);
+
+          // Update local boost input and header immediately to reflect what AI recommended
+          this.boostAmount.set(effectiveBoost);
+
+          // Cache recommendation response and update goal's monthlyBoost so outer cards match AI result
           await this.goalsService.applyRecommendation(
             goal.id,
-            0, // only cache the text first without applying boost until user confirms
+            effectiveBoost,
             this.selectedStrategy,
             res.replyText,
             alloc
