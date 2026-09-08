@@ -71,16 +71,6 @@
 
   <!-- Bottom Action Section -->
   <div class="sidebar-footer">
-    <!-- Quick Chat CTA -->
-    <button class="btn-quick-chat" routerLink="/ai-advisor" [title]="'Quick Chat'">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
-      @if (!isCollapsed()) {
-        <span>Quick Chat</span>
-      }
-    </button>
-
     <div class="footer-links">
       <!-- Theme Switcher Button -->
       <button class="footer-link theme-toggle-btn" (click)="themeService.toggleTheme()" [title]="themeService.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
