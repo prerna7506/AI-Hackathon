@@ -26,7 +26,7 @@ export class ApplyRecommendationModalComponent {
   
   viewMode = signal<'loading' | 'result'>('loading');
   isApplying = signal(false);
-  loadingStep = signal('Submitting goal data to Pipeline 22027...');
+  loadingStep = signal('Submitting goal parameters to AI Goal Advisor...');
   recommendationResult = signal<string | null>(null);
   errorMessage = signal<string | null>(null);
 
@@ -117,7 +117,7 @@ export class ApplyRecommendationModalComponent {
     this.isApplying.set(true);
     this.viewMode.set('loading');
     this.errorMessage.set(null);
-    this.loadingStep.set('Submitting goal data to Pipeline 22027 (Goal Advisor)...');
+    this.loadingStep.set('Submitting goal parameters to AI Goal Advisor...');
 
     setTimeout(() => {
       if (this.isApplying()) {
@@ -151,7 +151,7 @@ export class ApplyRecommendationModalComponent {
         error: (err) => {
           console.error('[ApplyRecommendationModal] Workflow error:', err);
           this.isApplying.set(false);
-          this.errorMessage.set(err?.message || 'Failed to connect to AI Advisor workflow pipeline.');
+          this.errorMessage.set(err?.message || 'Failed to connect to AI Goal Advisor.');
         }
       });
   }
