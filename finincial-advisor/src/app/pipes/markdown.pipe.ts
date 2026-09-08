@@ -144,6 +144,17 @@ export class MarkdownPipe implements PipeTransform {
   }
 
   /**
+   * Cleans markdown artifacts (*, _, #, `, ~, colons, dashes) from extracted string values
+   */
+  private cleanMarkdownValue(val: string | null | undefined): string {
+    if (!val) return '';
+    return val
+      .replace(/[*_#`~]/g, '')
+      .replace(/^[:\s—–-]+|[:\s—–-]+$/g, '')
+      .trim();
+  }
+
+  /**
    * Transforms raw Goal Recommendation output from Pipeline 22027 into structured executive dashboard cards
    */
   private parseGoalRecommendation(text: string): string | null {
@@ -151,59 +162,61 @@ export class MarkdownPipe implements PipeTransform {
       return null;
     }
 
-    // Extract Goal Name
-    const goalMatch = text.match(/Goal(?:\s*Name)?:\s*([^\r\n]+)/i);
-    const goalName = goalMatch ? goalMatch[1].trim() : 'Financial Goal';
+    // Extract Goal Name (must have colon to avoid matching GOAL RECOMMENDATION header)
+    const goalMatch = text.match(/(?:^|[\r\n])\s*(?:[-*]\s*)?(?:\*\*|#{1,6}\s*)?Goal(?:\s*Name)?\s*:\s*([^\r\n]+)/i);
+    const goalName = goalMatch ? this.cleanMarkdownValue(goalMatch[1]) : 'Financial Goal';
 
     // Extract Status
-    const statusMatch = text.match(/Status:\s*([^\r\n]+)/i);
-    const status = statusMatch ? statusMatch[1].trim() : 'On Track';
+    const statusMatch = text.match(/(?:^|[\r\n])\s*(?:[-*]\s*)?(?:\*\*|#{1,6}\s*)?(?:Goal\s*)?Status\s*:\s*([^\r\n]+)/i);
+    const status = statusMatch ? this.cleanMarkdownValue(statusMatch[1]) : 'On Track';
 
     // Extract Target Amount
-    const targetMatch = text.match(/Target Amount:\s*([^\r\n]+)/i);
-    const targetAmount = targetMatch ? targetMatch[1].trim() : '₹0';
+    const targetMatch = text.match(/(?:^|[\r\n])\s*(?:[-*]\s*)?(?:\*\*|#{1,6}\s*)?Target(?:\s*Amount)?\s*:\s*([^\r\n]+)/i);
+    const targetAmount = targetMatch ? this.cleanMarkdownValue(targetMatch[1]) : '₹0';
 
     // Extract Current Saved
-    const savedMatch = text.match(/Current Saved(?:\s*Amount)?:\s*([^\r\n]+)/i);
-    const currentSaved = savedMatch ? savedMatch[1].trim() : '₹0';
+    const savedMatch = text.match(/(?:^|[\r\n])\s*(?:[-*]\s*)?(?:\*\*|#{1,6}\s*)?Current Saved(?:\s*Amount)?\s*:\s*([^\r\n]+)/i);
+    const currentSaved = savedMatch ? this.cleanMarkdownValue(savedMatch[1]) : '₹0';
 
     // Extract Remaining Amount
-    const remainingMatch = text.match(/Remaining Amount:\s*([^\r\n]+)/i);
-    const remainingAmount = remainingMatch ? remainingMatch[1].trim() : '₹0';
+    const remainingMatch = text.match(/(?:^|[\r\n])\s*(?:[-*]\s*)?(?:\*\*|#{1,6}\s*)?Remaining(?:\s*Amount)?\s*:\s*([^\r\n]+)/i);
+    const remainingAmount = remainingMatch ? this.cleanMarkdownValue(remainingMatch[1]) : '₹0';
 
     // Extract Timeline
-    const timelineMatch = text.match(/Timeline:\s*([^\r\n]+)/i);
-    const timeline = timelineMatch ? timelineMatch[1].trim() : '—';
+    const timelineMatch = text.match(/(?:^|[\r\n])\s*(?:[-*]\s*)?(?:\*\*|#{1,6}\s*)?Timeline\s*:\s*([^\r\n]+)/i);
+    const timeline = timelineMatch ? this.cleanMarkdownValue(timelineMatch[1]) : '—';
 
     // Extract Monthly Boost
-    const boostMatch = text.match(/Recommended Monthly Increase:\s*([^\r\n]+)/i);
-    const boost = boostMatch ? boostMatch[1].trim() : '₹5,000';
+    const boostMatch = text.match(/(?:^|[\r\n])\s*(?:[-*]\s*)?(?:\*\*|#{1,6}\s*)?Recommended Monthly Increase\s*:\s*([^\r\n]+)/i);
+    const rawBoost = boostMatch ? this.cleanMarkdownValue(boostMatch[1]) : '₹5,000';
+    const cleanBoost = rawBoost.replace(/^INR\s*/i, '₹');
+    const boostClean = cleanBoost.startsWith('+') ? cleanBoost : `+${cleanBoost}`;
 
     // Extract Monthly Action description
-    const actionMatch = text.match(/Action:\s*([^\r\n]+)/i);
-    const action = actionMatch ? actionMatch[1].trim() : `Increase monthly savings by ${boost}.`;
+    const actionMatch = text.match(/(?:^|[\r\n])\s*(?:[-*]\s*)?(?:\*\*|#{1,6}\s*)?Action\s*:\s*([^\r\n]+)/i);
+    const action = actionMatch ? this.cleanMarkdownValue(actionMatch[1]) : `Increase monthly savings by ${cleanBoost}.`;
 
-    // Extract Allocations
-    const equityMatch = text.match(/Equity:\s*(\d+)%?/i);
-    const debtMatch = text.match(/Debt:\s*(\d+)%?/i);
-    const liquidMatch = text.match(/Liquid:\s*(\d+)%?/i);
+    // Extract Allocations (robust to markdown bold/formatting between keyword and number)
+    const equityMatch = text.match(/Equity[^\d\n\r]*(\d+(?:\.\d+)?)/i);
+    const debtMatch = text.match(/Debt[^\d\n\r]*(\d+(?:\.\d+)?)/i);
+    const liquidMatch = text.match(/Liquid[^\d\n\r]*(\d+(?:\.\d+)?)/i);
 
-    const equity = equityMatch ? parseInt(equityMatch[1], 10) : 50;
-    const debt = debtMatch ? parseInt(debtMatch[1], 10) : 40;
-    const liquid = liquidMatch ? parseInt(liquidMatch[1], 10) : 10;
+    const equity = equityMatch ? Math.round(parseFloat(equityMatch[1])) : 50;
+    const debt = debtMatch ? Math.round(parseFloat(debtMatch[1])) : 40;
+    const liquid = liquidMatch ? Math.round(parseFloat(liquidMatch[1])) : 10;
 
     // Extract Allocation Risk
-    const riskMatch = text.match(/Allocation Risk:\s*([^\r\n]+)/i) || text.match(/Risk:\s*([^\r\n]+)/i);
-    const risk = riskMatch ? riskMatch[1].trim() : 'Moderate';
+    const riskMatch = text.match(/(?:^|[\r\n])\s*(?:[-*]\s*)?(?:\*\*|#{1,6}\s*)?(?:Allocation\s*)?Risk\s*:\s*([^\r\n]+)/i);
+    const risk = riskMatch ? this.cleanMarkdownValue(riskMatch[1]) : 'Moderate';
 
-    // Extract Allocation Assessment text (Between ALLOCATION ASSESSMENT and AI ADVISOR VIEW / FINAL RECOMMENDATION)
+    // Extract Allocation Assessment text
     let assessment = '';
-    const assessBlockMatch = text.match(/ALLOCATION ASSESSMENT\s*([\s\S]*?)(?=(?:AI ADVISOR VIEW|FINAL RECOMMENDATION|$))/i);
+    const assessBlockMatch = text.match(/ALLOCATION ASSESSMENT\s*([\s\S]*?)(?=(?:AI ADVISOR VIEW|FINAL RECOMMENDATION|GOAL RECOMMENDATION|MONTHLY ACTION|$))/i);
     if (assessBlockMatch) {
       assessment = assessBlockMatch[1]
-        .replace(/Allocation Risk:\s*[^\r\n]+/gi, '')
-        .replace(/Risk:\s*[^\r\n]+/gi, '')
+        .replace(/(?:^|[\r\n])\s*(?:[-*]\s*)?(?:\*\*|#{1,6}\s*)?(?:Allocation\s*)?Risk\s*:\s*[^\r\n]+/gi, '')
         .replace(/^[*\s\r\n#—-]+|[*\s\r\n#—-]+$/g, '')
+        .replace(/\*\*/g, '')
         .trim();
     }
 
@@ -213,6 +226,7 @@ export class MarkdownPipe implements PipeTransform {
     if (advisorMatch) {
       advisorView = advisorMatch[1]
         .replace(/^[*\s\r\n#—-]+|[*\s\r\n#—-]+$/g, '')
+        .replace(/^>\s*/gm, '')
         .trim();
     }
 
@@ -228,7 +242,6 @@ export class MarkdownPipe implements PipeTransform {
     // Format UI states
     const isCaution = status.toLowerCase().includes('needs') || status.toLowerCase().includes('risk') || status.toLowerCase().includes('behind');
     const statusBadgeClass = isCaution ? 'status-caution' : 'status-healthy';
-    const boostClean = boost.startsWith('+') ? boost : `+${boost}`;
     
     const riskClean = risk.toLowerCase();
     const riskBadgeClass = riskClean.includes('high') ? 'risk-high' : riskClean.includes('low') ? 'risk-low' : 'risk-moderate';
@@ -320,7 +333,7 @@ export class MarkdownPipe implements PipeTransform {
       </div>
     </div>
     <div class="advisor-card-content">
-      <p>${advisorView}</p>
+      ${marked.parse(advisorView)}
     </div>
   </div>` : ''}
 
@@ -332,7 +345,7 @@ export class MarkdownPipe implements PipeTransform {
       <span class="rec-title">FINAL STRATEGIC RECOMMENDATION</span>
     </div>
     <div class="rec-content">
-      <p>${finalRec}</p>
+      ${marked.parse(finalRec)}
     </div>
   </div>` : ''}
 </div>

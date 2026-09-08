@@ -293,10 +293,6 @@ Please evaluate my preparedness score, required amount, accessible savings, safe
     }
   }
 
-  continueInChat(): void {
-    this.router.navigate(['/ai-advisor'], { queryParams: { prompt: this.lastPrompt, pipelineId: '21759' } });
-  }
-
   ngOnDestroy(): void {
     this.stopTimer();
   }

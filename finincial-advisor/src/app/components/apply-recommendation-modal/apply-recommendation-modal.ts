@@ -180,10 +180,5 @@ export class ApplyRecommendationModalComponent {
       this.isApplying.set(false);
     }
   }
-
-  openInAiAdvisor(): void {
-    this.close();
-    this.router.navigate(['/ai-advisor']);
-  }
 }
 
