@@ -110,6 +110,23 @@
           </div>
         </div>
 
+        <!-- Current Monthly Saving Field -->
+        <div class="form-group">
+          <label for="currentMonthlySavingsInput">
+            Current Monthly Saving (₹/mo)
+            <span class="sub-label-hint" style="font-weight: normal; color: var(--text-muted); font-size: 0.78rem;">— What you currently save each month for this goal</span>
+          </label>
+          <input 
+            id="currentMonthlySavingsInput"
+            type="number" 
+            placeholder="e.g. 25000" 
+            [(ngModel)]="currentMonthlySavings" 
+            name="currentMonthlySavings" 
+            min="0"
+            step="1000"
+          />
+        </div>
+
         <!-- Timeline Slider -->
         <div class="form-group">
           <div class="label-row">

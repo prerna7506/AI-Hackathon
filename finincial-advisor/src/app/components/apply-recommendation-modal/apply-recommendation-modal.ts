@@ -16,8 +16,9 @@ export class ApplyRecommendationModalComponent {
   goalsService = inject(GoalsService);
   private router = inject(Router);
 
-  // Dynamic monthly boost amount signal & custom allocations
+  // Dynamic monthly boost amount signal, current monthly savings & custom allocations
   boostAmount = signal<number>(5000);
+  currentMonthlySavings = signal<number>(30000);
   customEquity = signal<number>(50);
   customDebt = signal<number>(40);
   customLiquid = signal<number>(10);
@@ -35,16 +36,6 @@ export class ApplyRecommendationModalComponent {
     return goals.find(g => g.isPrimary) || goals[0] || null;
   });
 
-  smartAllocation = computed(() => {
-    const goal = this.activeGoal();
-    return this.goalsService.calculateSmartAllocation(goal);
-  });
-
-  financials = computed(() => {
-    const goal = this.activeGoal();
-    return this.goalsService.calculateGoalFinancials(goal);
-  });
-
   currentAllocation = computed(() => {
     return {
       equity: Number(this.customEquity()) || 0,
@@ -53,24 +44,46 @@ export class ApplyRecommendationModalComponent {
     };
   });
 
+  smartAllocation = computed(() => {
+    const goal = this.activeGoal();
+    return this.goalsService.calculateSmartAllocation(goal, this.currentAllocation());
+  });
+
+  financials = computed(() => {
+    const goal = this.activeGoal();
+    return this.goalsService.calculateGoalFinancials(
+      goal,
+      this.currentAllocation(),
+      this.currentMonthlySavings()
+    );
+  });
+
   totalAllocation = computed(() => {
     return this.currentAllocation().equity + this.currentAllocation().debt + this.currentAllocation().liquid;
   });
 
   constructor() {
-    // When modal opens, sync dynamic boost and auto-run analysis if no cached result, or show cached result
+    // When modal opens, sync dynamic boost, current monthly savings, and allocations
     effect(() => {
       const isOpen = this.goalsService.isRecommendationModalOpen();
       const goal = this.activeGoal();
-      const fin = this.financials();
       const alloc = this.smartAllocation();
 
       untracked(() => {
         if (isOpen && goal) {
-          // Initialize dynamic boost and allocation from goal metrics
+          // Initialize dynamic current monthly savings from goal metrics or default
+          const curMonthly = goal.monthlySavings && goal.monthlySavings > 0
+            ? goal.monthlySavings
+            : 30000;
+          this.currentMonthlySavings.set(curMonthly);
+
+          // Calculate fresh dynamic financials with current allocation and monthly savings
+          const fin = this.goalsService.calculateGoalFinancials(goal, alloc, curMonthly);
+
           const dynamicBoost = goal.monthlyBoost && goal.monthlyBoost > 0
             ? goal.monthlyBoost
-            : 0;
+            : fin.recommendedMonthlyBoost;
+
           this.boostAmount.set(dynamicBoost);
           this.customEquity.set(alloc.equity);
           this.customDebt.set(alloc.debt);
@@ -91,6 +104,10 @@ export class ApplyRecommendationModalComponent {
 
   setBoostPreset(amount: number): void {
     this.boostAmount.set(amount);
+  }
+
+  setCurrentSavingsPreset(amount: number): void {
+    this.currentMonthlySavings.set(amount);
   }
 
   setAllocPreset(eq: number, db: number, lq: number): void {
@@ -148,8 +165,10 @@ export class ApplyRecommendationModalComponent {
     this.recommendationResult.set(null);
     this.showCustomParams.set(false);
 
-    const currentBoost = goal.monthlyBoost && goal.monthlyBoost > 0 ? goal.monthlyBoost : 0;
     const alloc = this.currentAllocation();
+    const curSavings = Number(this.currentMonthlySavings()) || 0;
+    const dynamicFin = this.goalsService.calculateGoalFinancials(goal, alloc, curSavings);
+    const currentBoost = dynamicFin.recommendedMonthlyBoost;
 
     this.isApplying.set(true);
     this.viewMode.set('loading');
@@ -160,16 +179,16 @@ export class ApplyRecommendationModalComponent {
       if (this.isApplying()) {
         this.loadingStep.set('Evaluating timeline & investment allocation risk...');
       }
-    }, 3000);
+    }, 2000);
 
     setTimeout(() => {
       if (this.isApplying()) {
         this.loadingStep.set('Finalizing AI goal optimization recommendations...');
       }
-    }, 6000);
+    }, 4000);
 
     this.goalsService
-      .runGoalRecommendationWorkflow(goal, currentBoost, this.selectedStrategy, alloc)
+      .runGoalRecommendationWorkflow(goal, currentBoost, this.selectedStrategy, alloc, curSavings)
       .subscribe({
         next: async (res) => {
           this.isApplying.set(false);
@@ -178,9 +197,9 @@ export class ApplyRecommendationModalComponent {
 
           // Extract dynamic AI boost from the agent's response text if present
           const parsedAiBoost = this.extractAiBoostAmount(res.replyText);
-          const effectiveBoost = (parsedAiBoost && parsedAiBoost > 0)
+          const effectiveBoost = (parsedAiBoost !== null && parsedAiBoost >= 0)
             ? parsedAiBoost
-            : (currentBoost > 0 ? currentBoost : this.financials().recommendedMonthlyBoost);
+            : this.financials().recommendedMonthlyBoost;
 
           // Update local boost input and header immediately to reflect what AI recommended
           this.boostAmount.set(effectiveBoost);
@@ -191,7 +210,8 @@ export class ApplyRecommendationModalComponent {
             effectiveBoost,
             this.selectedStrategy,
             res.replyText,
-            alloc
+            alloc,
+            curSavings
           );
         },
         error: (err) => {
@@ -207,6 +227,7 @@ export class ApplyRecommendationModalComponent {
     if (!goal) return;
 
     const currentBoost = this.boostAmount();
+    const curSavings = Number(this.currentMonthlySavings()) || 0;
     this.isApplying.set(true);
     try {
       const alloc = this.currentAllocation();
@@ -215,7 +236,8 @@ export class ApplyRecommendationModalComponent {
         currentBoost,
         this.selectedStrategy,
         this.recommendationResult() || undefined,
-        alloc
+        alloc,
+        curSavings
       );
       this.goalsService.showToast(`Applied AI Changes to "${goal.title}"! Monthly savings increased by ₹${currentBoost.toLocaleString('en-IN')}.`);
       this.close();

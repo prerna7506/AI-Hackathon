@@ -16,6 +16,7 @@ export class CreateGoalModalComponent {
   title = '';
   targetAmount: number | null = 1000000;
   startingAmount: number | null = 250000;
+  currentMonthlySavings: number | null = 25000;
   timelineYears: number = 3;
   selectedIcon: 'house' | 'car' | 'flight' | 'graduation' | 'retirement' | 'shield' = 'car';
   isSaving = signal(false);
@@ -117,10 +118,15 @@ export class CreateGoalModalComponent {
       status: 'On Track',
       equityAllocation: smartAlloc.equity,
       debtAllocation: smartAlloc.debt,
-      liquidAllocation: smartAlloc.liquid
+      liquidAllocation: smartAlloc.liquid,
+      monthlySavings: Number(this.currentMonthlySavings) || 0
     };
 
-    const financials = this.goalsService.calculateGoalFinancials(tempGoalItem);
+    const financials = this.goalsService.calculateGoalFinancials(
+      tempGoalItem, 
+      smartAlloc, 
+      Number(this.currentMonthlySavings) || 0
+    );
 
     try {
       await this.goalsService.addGoal({
@@ -135,13 +141,15 @@ export class CreateGoalModalComponent {
         equityAllocation: smartAlloc.equity,
         debtAllocation: smartAlloc.debt,
         liquidAllocation: smartAlloc.liquid,
-        monthlyBoost: 0
+        monthlyBoost: 0,
+        monthlySavings: Number(this.currentMonthlySavings) || 0
       });
 
       // Reset form
       this.title = '';
       this.targetAmount = 1000000;
       this.startingAmount = 250000;
+      this.currentMonthlySavings = 25000;
       this.timelineYears = 3;
       this.selectedIcon = 'car';
       this.resetValidation();

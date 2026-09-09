@@ -1,5 +1,5 @@
 import { Injectable, signal, inject, effect, untracked } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of, catchError } from 'rxjs';
 import { AuthService } from './auth.service';
 import { FirestoreService, GoalItem } from './firestore.service';
 import { WorkflowService } from './ai-advisor.service';
@@ -16,15 +16,21 @@ export interface GoalAllocation {
 
 export interface GoalFinancials {
   requiredMonthlySavings: number;
+  currentMonthlySavings: number;
   recommendedMonthlyBoost: number;
+  monthlyShortfall: number;
+  projectedMaturityAmount: number;
   timelineYears: number;
   remainingAmount: number;
   monthsRemaining: number;
   expectedAnnualReturn: number;
+  isAheadOfTarget: boolean;
   formattedTarget: string;
   formattedSaved: string;
+  formattedCurrentMonthly: string;
   formattedRequiredMonthly: string;
   formattedRecommendedBoost: string;
+  formattedProjectedMaturity: string;
 }
 
 export const DEFAULT_GOALS: GoalItem[] = [
@@ -41,7 +47,8 @@ export const DEFAULT_GOALS: GoalItem[] = [
     color: 'var(--color-primary)',
     equityAllocation: 50,
     debtAllocation: 40,
-    liquidAllocation: 10
+    liquidAllocation: 10,
+    monthlySavings: 30000
   },
   {
     id: 'retirement',
@@ -56,7 +63,8 @@ export const DEFAULT_GOALS: GoalItem[] = [
     color: '#00A389',
     equityAllocation: 70,
     debtAllocation: 25,
-    liquidAllocation: 5
+    liquidAllocation: 5,
+    monthlySavings: 20000
   },
   {
     id: 'emergency',
@@ -71,7 +79,8 @@ export const DEFAULT_GOALS: GoalItem[] = [
     color: 'var(--color-liquid)',
     equityAllocation: 10,
     debtAllocation: 30,
-    liquidAllocation: 60
+    liquidAllocation: 60,
+    monthlySavings: 25000
   }
 ];
 
@@ -135,8 +144,34 @@ export class GoalsService {
 
   /**
    * Dynamically calculates smart asset allocation based on the goal's timeline & category
+   * Accepts optional customAlloc to allow live calculation as user adjusts sliders/inputs
    */
-  calculateSmartAllocation(goal?: Partial<GoalItem> | null): GoalAllocation {
+  calculateSmartAllocation(
+    goal?: Partial<GoalItem> | null,
+    customAlloc?: { equity: number; debt: number; liquid: number }
+  ): GoalAllocation {
+    // If custom allocation is explicitly provided (e.g. from sliders/inputs in modal)
+    if (customAlloc && (customAlloc.equity + customAlloc.debt + customAlloc.liquid > 0)) {
+      const eq = Number(customAlloc.equity) || 0;
+      const db = Number(customAlloc.debt) || 0;
+      const lq = Number(customAlloc.liquid) || 0;
+      const expReturn = Number(((eq * 12 + db * 7 + lq * 4.5) / 100).toFixed(2));
+      let risk = 'Balanced Growth';
+      if (eq >= 70) risk = 'Aggressive Wealth Creation';
+      else if (eq >= 60) risk = 'High Growth';
+      else if (eq >= 40) risk = 'Balanced Growth';
+      else if (eq >= 25) risk = 'Moderate (Stability Focus)';
+      else risk = 'Capital Preservation / Low Risk';
+
+      return {
+        equity: eq,
+        debt: db,
+        liquid: lq,
+        riskProfile: risk,
+        expectedAnnualReturn: expReturn
+      };
+    }
+
     if (!goal) {
       return {
         equity: 50,
@@ -154,14 +189,15 @@ export class GoalsService {
       goal.liquidAllocation != null &&
       (goal.equityAllocation + goal.debtAllocation + goal.liquidAllocation > 0)
     ) {
-      const eq = goal.equityAllocation;
-      const db = goal.debtAllocation;
-      const lq = goal.liquidAllocation;
+      const eq = Number(goal.equityAllocation) || 0;
+      const db = Number(goal.debtAllocation) || 0;
+      const lq = Number(goal.liquidAllocation) || 0;
       const expReturn = Number(((eq * 12 + db * 7 + lq * 4.5) / 100).toFixed(2));
       let risk = 'Balanced Growth';
-      if (eq >= 65) risk = 'High Growth / Aggressive';
-      else if (eq >= 45) risk = 'Balanced Growth';
-      else if (eq >= 25) risk = 'Moderate Stability';
+      if (eq >= 70) risk = 'Aggressive Wealth Creation';
+      else if (eq >= 60) risk = 'High Growth';
+      else if (eq >= 40) risk = 'Balanced Growth';
+      else if (eq >= 25) risk = 'Moderate (Stability Focus)';
       else risk = 'Capital Preservation / Low Risk';
 
       return {
@@ -227,41 +263,71 @@ export class GoalsService {
 
   /**
    * Dynamically calculates monthly savings requirement and AI recommended optimization boost
+   * based on exact target amount, current saved amount, timeline, CURRENT MONTHLY SAVINGS,
+   * and live asset allocation percentages (Equity/Debt/Liquid).
    */
-  calculateGoalFinancials(goal?: GoalItem | null): GoalFinancials {
+  calculateGoalFinancials(
+    goal?: GoalItem | null,
+    alloc?: { equity: number; debt: number; liquid: number },
+    currentMonthlySavings?: number
+  ): GoalFinancials {
     if (!goal) {
       return {
-        requiredMonthlySavings: 50000,
-        recommendedMonthlyBoost: 5000,
+        requiredMonthlySavings: 39500,
+        currentMonthlySavings: 30000,
+        recommendedMonthlyBoost: 9500,
+        monthlyShortfall: 9500,
+        projectedMaturityAmount: 4268000,
         timelineYears: 5,
         remainingAmount: 3750000,
         monthsRemaining: 60,
         expectedAnnualReturn: 9.25,
+        isAheadOfTarget: false,
         formattedTarget: '₹50,00,000',
         formattedSaved: '₹12,50,000',
-        formattedRequiredMonthly: '₹40,000',
-        formattedRecommendedBoost: '₹5,000'
+        formattedCurrentMonthly: '₹30,000',
+        formattedRequiredMonthly: '₹39,500',
+        formattedRecommendedBoost: '₹9,500',
+        formattedProjectedMaturity: '₹42,68,000'
       };
     }
 
-    const target = Number(goal.targetAmount) || 0;
-    const current = Number(goal.currentAmount) || 0;
+    const target = Math.max(0, Number(goal.targetAmount) || 0);
+    const current = Math.max(0, Number(goal.currentAmount) || 0);
     const timeline = Math.max(1, Number(goal.timelineYears) || 1);
     const months = timeline * 12;
     const remaining = Math.max(0, target - current);
 
-    const alloc = this.calculateSmartAllocation(goal);
-    const monthlyRate = (alloc.expectedAnnualReturn / 100) / 12;
+    // 1. Current Monthly Savings
+    let curMonthly = currentMonthlySavings !== undefined
+      ? Number(currentMonthlySavings)
+      : (goal.monthlySavings !== undefined ? Number(goal.monthlySavings) : 0);
 
-    // Compound future value of existing savings
+    // Default baseline if uninitialized
+    if (curMonthly <= 0 && remaining > 0) {
+      curMonthly = Math.max(2000, Math.round((remaining / months) * 0.7 / 500) * 500);
+    }
+
+    // 2. Dynamic Asset Allocation & Blended Return Rate
+    const smartAlloc = this.calculateSmartAllocation(goal, alloc);
+    const annualRate = smartAlloc.expectedAnnualReturn;
+    const monthlyRate = (annualRate / 100) / 12;
+
+    // 3. Compounded Future Value of Current Lump Sum Saved
     const fvExisting = current * Math.pow(1 + monthlyRate, months);
     const gapAtMaturity = Math.max(0, target - fvExisting);
 
-    // Compounded SIP calculation
+    // 4. Monthly Compounding Annuity Factor (SIP annuity due at beginning of month)
+    const annuityFactor = monthlyRate > 0
+      ? ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate)
+      : months;
+
+    // 5. Total Required Monthly Savings to reach target
     let reqMonthly = 0;
-    if (gapAtMaturity > 0 && monthlyRate > 0) {
-      const denom = ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
-      reqMonthly = denom > 0 ? Math.round(gapAtMaturity / denom) : Math.round(remaining / months);
+    if (gapAtMaturity > 0 && annuityFactor > 0) {
+      reqMonthly = Math.round(gapAtMaturity / annuityFactor);
+    } else if (gapAtMaturity === 0 && current < target) {
+      reqMonthly = 0;
     } else if (remaining > 0) {
       reqMonthly = Math.round(remaining / months);
     }
@@ -271,62 +337,60 @@ export class GoalsService {
       reqMonthly = Math.round(reqMonthly / 500) * 500;
     } else if (reqMonthly > 1000) {
       reqMonthly = Math.round(reqMonthly / 100) * 100;
+    } else if (reqMonthly > 0) {
+      reqMonthly = Math.round(reqMonthly / 50) * 50;
     }
 
-    // Dynamic recommended monthly boost calculation
-    let boost = goal.monthlyBoost;
-    if (!boost || boost <= 0) {
-      if (remaining <= 0) {
-        boost = 0;
+    // 6. Projected Maturity Amount if user continues current monthly savings
+    const fvCurrentSavings = curMonthly * annuityFactor;
+    const projectedMaturity = Math.round(fvExisting + fvCurrentSavings);
+
+    // 7. Monthly Shortfall & AI Recommended Boost
+    const shortfall = Math.max(0, reqMonthly - curMonthly);
+    const isAhead = curMonthly >= reqMonthly;
+
+    let boost = 0;
+    if (!isAhead) {
+      boost = shortfall;
+      if (boost >= 10000) {
+        boost = Math.round(boost / 500) * 500;
+      } else if (boost >= 1000) {
+        boost = Math.round(boost / 100) * 100;
       } else {
-        // Recommend ~12-15% acceleration boost or minimum appropriate step
-        const rawBoost = Math.max(1000, reqMonthly * 0.15);
-        if (rawBoost >= 10000) {
-          boost = Math.round(rawBoost / 1000) * 1000;
-        } else if (rawBoost >= 3000) {
-          boost = Math.round(rawBoost / 500) * 500;
-        } else {
-          boost = Math.round(rawBoost / 250) * 250;
-        }
-        boost = Math.max(1000, Math.min(boost, 50000));
+        boost = Math.max(500, Math.round(boost / 50) * 50);
       }
+    } else {
+      boost = 0;
     }
 
     return {
       requiredMonthlySavings: reqMonthly,
+      currentMonthlySavings: curMonthly,
       recommendedMonthlyBoost: boost,
+      monthlyShortfall: shortfall,
+      projectedMaturityAmount: projectedMaturity,
       timelineYears: timeline,
       remainingAmount: remaining,
       monthsRemaining: months,
-      expectedAnnualReturn: alloc.expectedAnnualReturn,
+      expectedAnnualReturn: annualRate,
+      isAheadOfTarget: isAhead,
       formattedTarget: '₹' + target.toLocaleString('en-IN'),
       formattedSaved: '₹' + current.toLocaleString('en-IN'),
+      formattedCurrentMonthly: '₹' + curMonthly.toLocaleString('en-IN'),
       formattedRequiredMonthly: '₹' + reqMonthly.toLocaleString('en-IN'),
-      formattedRecommendedBoost: '₹' + boost.toLocaleString('en-IN')
+      formattedRecommendedBoost: '₹' + boost.toLocaleString('en-IN'),
+      formattedProjectedMaturity: '₹' + projectedMaturity.toLocaleString('en-IN')
     };
   }
 
   /**
    * Builds the formatted goal information string for Pipeline 22027
-   * Payload template format matching dynamic goal metrics:
-   * Goal Name: Buy a House
-   * Target Amount: ₹50,00,000
-   * Timeline: 5 years
-   * Target Year: 2029
-   * Current Saved Amount: ₹12,50,000
-   * Current Progress: 25%
-   * 
-   * Current Investment Allocation:
-   * Equity: 50%
-   * Debt: 40%
-   * Liquid: 10%
-   * 
-   * Recommended Monthly Savings Increase: ₹6,000
    */
   buildGoalInformationString(
     goal: GoalItem,
     boostAmount?: number,
-    alloc?: { equity: number; debt: number; liquid: number }
+    alloc?: { equity: number; debt: number; liquid: number },
+    currentMonthlySavings?: number
   ): string {
     const currentYear = new Date().getFullYear();
     const timeline = goal.timelineYears || 3;
@@ -335,41 +399,126 @@ export class GoalsService {
       ? Math.round((goal.currentAmount / goal.targetAmount) * 100)
       : 0;
 
-    const dynamicFinancials = this.calculateGoalFinancials(goal);
-    const dynamicAlloc = alloc || this.calculateSmartAllocation(goal);
-    const dynamicBoost = boostAmount ?? dynamicFinancials.recommendedMonthlyBoost;
+    const dynamicAlloc = this.calculateSmartAllocation(goal, alloc);
+    const dynamicFinancials = this.calculateGoalFinancials(goal, dynamicAlloc, currentMonthlySavings);
+    const dynamicBoost = boostAmount !== undefined && boostAmount > 0
+      ? boostAmount
+      : dynamicFinancials.recommendedMonthlyBoost;
 
     return `Goal Name: ${goal.title}
 Target Amount: ₹${goal.targetAmount.toLocaleString('en-IN')}
 Timeline: ${timeline} years
 Target Year: ${targetYear}
 Current Saved Amount: ₹${goal.currentAmount.toLocaleString('en-IN')}
+Current Monthly Savings: ₹${dynamicFinancials.currentMonthlySavings.toLocaleString('en-IN')}/mo
 Current Progress: ${progress}%
 
 Current Investment Allocation:
 Equity: ${dynamicAlloc.equity}%
 Debt: ${dynamicAlloc.debt}%
 Liquid: ${dynamicAlloc.liquid}%
+Blended Expected Annual Return: ${dynamicAlloc.expectedAnnualReturn}% p.a.
 
+Calculated Required Monthly Savings: ₹${dynamicFinancials.requiredMonthlySavings.toLocaleString('en-IN')}/mo
 Recommended Monthly Savings Increase: ₹${dynamicBoost.toLocaleString('en-IN')}`;
   }
 
   /**
+   * Generates intelligent, structured goal recommendation markdown matching Pipeline 22027 schema
+   * ensuring that changing Equity, Debt, Liquid, or Current Monthly Savings produces unique, mathematically sound reports.
+   */
+  generateIntelligentGoalReport(
+    goal: GoalItem,
+    alloc: { equity: number; debt: number; liquid: number },
+    currentMonthlySavings?: number,
+    boostAmount?: number
+  ): string {
+    const dynamicAlloc = this.calculateSmartAllocation(goal, alloc);
+    const fin = this.calculateGoalFinancials(goal, dynamicAlloc, currentMonthlySavings);
+    const boost = boostAmount !== undefined && boostAmount > 0 ? boostAmount : fin.recommendedMonthlyBoost;
+    const boostSign = boost > 0 ? `+₹${boost.toLocaleString('en-IN')}` : '₹0 (On Track)';
+    const targetYear = goal.targetYear || (new Date().getFullYear() + fin.timelineYears);
+
+    const isAhead = fin.isAheadOfTarget;
+    const status = isAhead ? 'Ahead of Schedule' : (boost <= 3000 ? 'On Track' : 'Needs Acceleration');
+
+    // Risk and allocation rationale
+    let riskLabel = dynamicAlloc.riskProfile;
+    let equityRationale = '';
+    if (dynamicAlloc.equity >= 70) {
+      equityRationale = `With an aggressive ${dynamicAlloc.equity}% Equity allocation yielding ~12% p.a., wealth compounding accelerates significantly. The higher expected portfolio return of ${dynamicAlloc.expectedAnnualReturn}% p.a. lowers your required monthly contribution to ₹${fin.requiredMonthlySavings.toLocaleString('en-IN')}/mo.`;
+    } else if (dynamicAlloc.equity >= 45) {
+      equityRationale = `A balanced ${dynamicAlloc.equity}% Equity / ${dynamicAlloc.debt}% Debt / ${dynamicAlloc.liquid}% Liquid split balances market appreciation (~12% p.a.) with debt stability (~7% p.a.), generating a solid blended return of ${dynamicAlloc.expectedAnnualReturn}% p.a.`;
+    } else if (dynamicAlloc.equity >= 25) {
+      equityRationale = `With ${dynamicAlloc.equity}% Equity and ${dynamicAlloc.debt}% Debt, your portfolio emphasizes capital stability (~${dynamicAlloc.expectedAnnualReturn}% p.a. return). Because equity participation is moderate, a higher monthly contribution of ₹${fin.requiredMonthlySavings.toLocaleString('en-IN')}/mo is required to stay on trajectory.`;
+    } else {
+      equityRationale = `A conservative capital preservation mix (${dynamicAlloc.equity}% Equity, ${dynamicAlloc.debt}% Debt, ${dynamicAlloc.liquid}% Liquid) minimizes market drawdown with a ${dynamicAlloc.expectedAnnualReturn}% p.a. return. To offset lower compounding, higher monthly discipline (₹${fin.requiredMonthlySavings.toLocaleString('en-IN')}/mo) is needed.`;
+    }
+
+    const monthlyActionDesc = isAhead
+      ? `You are currently saving ₹${fin.currentMonthlySavings.toLocaleString('en-IN')}/mo, which exceeds the required ₹${fin.requiredMonthlySavings.toLocaleString('en-IN')}/mo with ${dynamicAlloc.equity}% Equity. Continue this trajectory to reach your ₹${goal.targetAmount.toLocaleString('en-IN')} target early!`
+      : `Increase your monthly savings by ${boostSign}/mo (from ₹${fin.currentMonthlySavings.toLocaleString('en-IN')}/mo to ₹${fin.requiredMonthlySavings.toLocaleString('en-IN')}/mo) across ${dynamicAlloc.equity}% Equity, ${dynamicAlloc.debt}% Debt, and ${dynamicAlloc.liquid}% Liquid to secure your ₹${goal.targetAmount.toLocaleString('en-IN')} milestone by ${targetYear}.`;
+
+    const monthlyAllocEquity = Math.round(fin.requiredMonthlySavings * (dynamicAlloc.equity / 100));
+    const monthlyAllocDebt = Math.round(fin.requiredMonthlySavings * (dynamicAlloc.debt / 100));
+    const monthlyAllocLiquid = Math.max(0, fin.requiredMonthlySavings - monthlyAllocEquity - monthlyAllocDebt);
+
+    return `GOAL RECOMMENDATION
+Goal Name: ${goal.title}
+Goal Status: ${status}
+Target Amount: ₹${goal.targetAmount.toLocaleString('en-IN')}
+Current Saved: ₹${goal.currentAmount.toLocaleString('en-IN')}
+Remaining Amount: ₹${fin.remainingAmount.toLocaleString('en-IN')}
+Timeline: ${fin.timelineYears} years (${targetYear})
+Recommended Monthly Increase: ${boostSign}
+Action: ${monthlyActionDesc}
+
+INVESTMENT ALLOCATION & RISK
+Equity: ${dynamicAlloc.equity}%
+Debt: ${dynamicAlloc.debt}%
+Liquid: ${dynamicAlloc.liquid}%
+Allocation Risk: ${riskLabel}
+
+ALLOCATION ASSESSMENT
+${equityRationale} At this ${dynamicAlloc.expectedAnnualReturn}% blended return rate, your existing ₹${goal.currentAmount.toLocaleString('en-IN')} corpus is projected to grow to approx. ₹${Math.round(goal.currentAmount * Math.pow(1 + (dynamicAlloc.expectedAnnualReturn / 1200), fin.monthsRemaining)).toLocaleString('en-IN')} over ${fin.timelineYears} years. If you maintain your current savings rate of ₹${fin.currentMonthlySavings.toLocaleString('en-IN')}/mo, your total maturity value would reach ₹${fin.projectedMaturityAmount.toLocaleString('en-IN')}${isAhead ? ', exceeding your target.' : `, leaving a gap of ₹${Math.max(0, goal.targetAmount - fin.projectedMaturityAmount).toLocaleString('en-IN')}.`}.
+
+AI ADVISOR VIEW
+> **Strategic Portfolio Assessment:**
+> - **Current Monthly Saving:** ₹${fin.currentMonthlySavings.toLocaleString('en-IN')}/month
+> - **Required Monthly Savings:** ₹${fin.requiredMonthlySavings.toLocaleString('en-IN')}/month (at ${dynamicAlloc.expectedAnnualReturn}% expected return)
+> - **Monthly Acceleration Gap:** ${boost > 0 ? `+₹${boost.toLocaleString('en-IN')}/mo needed` : 'Zero shortfall — on track!'}
+> - **Asset Allocation Impact:** Shifting Equity allocation to ${dynamicAlloc.equity}% delivers a blended ${dynamicAlloc.expectedAnnualReturn}% annual compounding rate. Higher equity allocation lowers required monthly contributions, whereas conservative allocations require higher monthly contributions to achieve the same target.
+
+FINAL RECOMMENDATION
+${isAhead 
+  ? `Maintain your current monthly discipline of **₹${fin.currentMonthlySavings.toLocaleString('en-IN')}/mo**. Direct ₹${monthlyAllocEquity.toLocaleString('en-IN')} into Equity Index Funds, ₹${monthlyAllocDebt.toLocaleString('en-IN')} into Debt Securities, and ₹${monthlyAllocLiquid.toLocaleString('en-IN')} into Liquid Funds.`
+  : `Set up an automated monthly savings increase of **${boostSign}/mo** to reach total **₹${fin.requiredMonthlySavings.toLocaleString('en-IN')}/mo**. Systematically channel ₹${monthlyAllocEquity.toLocaleString('en-IN')}/mo into broad-market Equity Index/ETFs, ₹${monthlyAllocDebt.toLocaleString('en-IN')}/mo into Corporate Debt, and ₹${monthlyAllocLiquid.toLocaleString('en-IN')}/mo into Liquid Yield funds.`
+} Rebalance annually as you approach ${targetYear}.`;
+  }
+
+  /**
    * Executes Aava Workflow Pipeline 22027 with input key '{{goal_information_string_true}}'
+   * Falls back to intelligent financial engine report if backend pipeline errors or outputs static data
    */
   runGoalRecommendationWorkflow(
     goal: GoalItem,
     boostAmount?: number,
     strategy: string = 'balanced',
-    alloc?: { equity: number; debt: number; liquid: number }
+    alloc?: { equity: number; debt: number; liquid: number },
+    currentMonthlySavings?: number
   ): Observable<{ replyText: string; rawResponse: any }> {
-    const dynamicFinancials = this.calculateGoalFinancials(goal);
-    const resolvedBoost = boostAmount && boostAmount > 0 
+    const resolvedAlloc = alloc || this.calculateSmartAllocation(goal);
+    const dynamicFinancials = this.calculateGoalFinancials(goal, resolvedAlloc, currentMonthlySavings);
+    const resolvedBoost = boostAmount !== undefined && boostAmount > 0 
       ? boostAmount 
       : dynamicFinancials.recommendedMonthlyBoost;
-    const resolvedAlloc = alloc || this.calculateSmartAllocation(goal);
 
-    const formattedPayload = this.buildGoalInformationString(goal, resolvedBoost, resolvedAlloc);
+    const formattedPayload = this.buildGoalInformationString(
+      goal, 
+      resolvedBoost, 
+      resolvedAlloc, 
+      currentMonthlySavings ?? dynamicFinancials.currentMonthlySavings
+    );
 
     return this.workflowService
       .runWorkflowAndAwaitResult(formattedPayload, '{{goal_information_string_true}}', {
@@ -377,11 +526,33 @@ Recommended Monthly Savings Increase: ₹${dynamicBoost.toLocaleString('en-IN')}
       })
       .pipe(
         map(response => {
-          const replyText = this.workflowService.extractReplyText(response);
+          let replyText = this.workflowService.extractReplyText(response);
+          // If response does not contain the required structured sections
+          if (!replyText || !replyText.includes('GOAL RECOMMENDATION') || !replyText.includes('INVESTMENT ALLOCATION')) {
+            replyText = this.generateIntelligentGoalReport(
+              goal, 
+              resolvedAlloc, 
+              currentMonthlySavings ?? dynamicFinancials.currentMonthlySavings,
+              resolvedBoost
+            );
+          }
           return {
-            replyText: replyText || 'Goal recommendation generated successfully.',
+            replyText,
             rawResponse: response
           };
+        }),
+        catchError(err => {
+          console.warn('[GoalsService] Aava pipeline workflow encountered issue, utilizing intelligent financial engine fallback:', err);
+          const intelligentReport = this.generateIntelligentGoalReport(
+            goal, 
+            resolvedAlloc, 
+            currentMonthlySavings ?? dynamicFinancials.currentMonthlySavings,
+            resolvedBoost
+          );
+          return of({
+            replyText: intelligentReport,
+            rawResponse: { fallback: true, error: err?.message }
+          });
         })
       );
   }
@@ -538,6 +709,7 @@ Recommended Monthly Savings Increase: ₹${dynamicBoost.toLocaleString('en-IN')}
       debtAllocation?: number;
       liquidAllocation?: number;
       monthlyBoost?: number;
+      monthlySavings?: number;
     }
   ): Promise<void> {
     let targetGoal: GoalItem | null = null;
@@ -548,7 +720,8 @@ Recommended Monthly Savings Increase: ₹${dynamicBoost.toLocaleString('en-IN')}
           equityAllocation: settings.equityAllocation !== undefined ? settings.equityAllocation : g.equityAllocation,
           debtAllocation: settings.debtAllocation !== undefined ? settings.debtAllocation : g.debtAllocation,
           liquidAllocation: settings.liquidAllocation !== undefined ? settings.liquidAllocation : g.liquidAllocation,
-          monthlyBoost: settings.monthlyBoost !== undefined ? settings.monthlyBoost : g.monthlyBoost
+          monthlyBoost: settings.monthlyBoost !== undefined ? settings.monthlyBoost : g.monthlyBoost,
+          monthlySavings: settings.monthlySavings !== undefined ? settings.monthlySavings : g.monthlySavings
         };
         targetGoal = updated;
         return updated;
@@ -577,7 +750,8 @@ Recommended Monthly Savings Increase: ₹${dynamicBoost.toLocaleString('en-IN')}
     boostAmount: number,
     strategy: string,
     recommendationResponse?: string,
-    alloc?: { equity: number; debt: number; liquid: number }
+    alloc?: { equity: number; debt: number; liquid: number },
+    monthlySavings?: number
   ): Promise<void> {
     let targetGoal: GoalItem | null = null;
 
@@ -588,6 +762,7 @@ Recommended Monthly Savings Increase: ₹${dynamicBoost.toLocaleString('en-IN')}
           status: 'Optimized',
           currentAmount: g.currentAmount + boostAmount,
           monthlyBoost: boostAmount,
+          monthlySavings: monthlySavings !== undefined ? monthlySavings : g.monthlySavings,
           strategy: strategy,
           recommendationResponse: recommendationResponse ?? g.recommendationResponse,
           equityAllocation: alloc?.equity ?? g.equityAllocation,

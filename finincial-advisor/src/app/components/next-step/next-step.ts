@@ -54,7 +54,9 @@ export class NextStepComponent {
     const goal = this.primaryGoal();
     const fin = this.financials();
     if (!goal) return '';
-    return `Target: ₹${goal.targetAmount.toLocaleString('en-IN')} by ${goal.targetYear} • Remaining Gap: ₹${fin.remainingAmount.toLocaleString('en-IN')} (over ${fin.timelineYears} yrs)`;
+    const curSavingStr = fin.currentMonthlySavings > 0 ? ` • Current: ₹${fin.currentMonthlySavings.toLocaleString('en-IN')}/mo` : '';
+    const reqSavingStr = ` • Required: ₹${fin.requiredMonthlySavings.toLocaleString('en-IN')}/mo`;
+    return `Target: ₹${goal.targetAmount.toLocaleString('en-IN')} by ${goal.targetYear}${curSavingStr}${reqSavingStr}`;
   });
 
   constructor() {

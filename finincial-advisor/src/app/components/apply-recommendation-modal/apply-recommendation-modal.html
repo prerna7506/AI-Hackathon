@@ -26,6 +26,7 @@
           <div class="goal-highlight-banner">
             <div class="banner-badge">Target: ₹{{ goal.targetAmount.toLocaleString('en-IN') }}</div>
             <div class="banner-saved">Saved: ₹{{ goal.currentAmount.toLocaleString('en-IN') }}</div>
+            <div class="banner-saving">Current Saving: ₹{{ financials().currentMonthlySavings.toLocaleString('en-IN') }}/mo</div>
             <div class="banner-timeline">{{ goal.timelineYears }} Yrs ({{ goal.targetYear }})</div>
             @if (recommendationResult() && boostAmount() > 0) {
               <div class="banner-boost">+₹{{ boostAmount().toLocaleString('en-IN') }}/mo</div>
@@ -69,9 +70,13 @@
                 <span class="step-check">✓</span>
                 <span>Compiled Goal & Allocation Data (Equity: {{ currentAllocation().equity }}%, Debt: {{ currentAllocation().debt }}%, Liquid: {{ currentAllocation().liquid }}%)</span>
               </div>
+              <div class="step-row completed">
+                <span class="step-check">✓</span>
+                <span>Factored Current Monthly Savings: ₹{{ financials().currentMonthlySavings.toLocaleString('en-IN') }}/mo ({{ financials().expectedAnnualReturn }}% Return)</span>
+              </div>
               <div class="step-row active">
                 <span class="step-spinner"></span>
-                <span>Executing Goal Advisor AI Analysis</span>
+                <span>Executing Goal Advisor AI Analysis & Compounding Calculations</span>
               </div>
               <div class="step-row pending">
                 <span class="step-dot"></span>
@@ -93,21 +98,48 @@
               </div>
               <div class="success-content">
                 <strong>AI Optimization Successfully Generated</strong>
-                <p>Calculated for +₹{{ boostAmount().toLocaleString('en-IN') }}/mo increase with {{ currentAllocation().equity }}% Equity, {{ currentAllocation().debt }}% Debt, {{ currentAllocation().liquid }}% Liquid allocation.</p>
+                <p>Current Saving: <strong>₹{{ financials().currentMonthlySavings.toLocaleString('en-IN') }}/mo</strong> • Required: <strong>₹{{ financials().requiredMonthlySavings.toLocaleString('en-IN') }}/mo</strong> (Recommended Boost: <strong>+₹{{ boostAmount().toLocaleString('en-IN') }}/mo</strong> with {{ currentAllocation().equity }}% Equity, {{ financials().expectedAnnualReturn }}% return).</p>
               </div>
               <button type="button" class="btn-toggle-adjust-params" (click)="toggleCustomParams()">
                 <span>{{ showCustomParams() ? 'Hide Adjust' : '✏️ Adjust & Re-run' }}</span>
               </button>
             </div>
 
-            <!-- Optional Parameter Customization Box -->
+            <!-- Parameter Customization Box -->
             @if (showCustomParams()) {
               <div class="modal-params-adjust-card">
-                <h5 class="params-title">Customize Asset Allocation (Risk Preference)</h5>
+                <h5 class="params-title">Customize Current Savings & Asset Allocation (Risk Preference)</h5>
                 
-                <div class="params-grid single-col">
-                  <!-- Allocation Control -->
-                  <div class="param-box">
+                <div class="params-grid two-col">
+                  <!-- 1. Current Monthly Savings Input Field -->
+                  <div class="param-box savings-param-box">
+                    <div class="alloc-label-row">
+                      <label>Current Monthly Saving</label>
+                      <span class="param-hint-tag">Your existing SIP / savings</span>
+                    </div>
+                    <div class="savings-input-wrapper">
+                      <span class="currency-prefix">₹</span>
+                      <input 
+                        type="number" 
+                        min="0" 
+                        step="1000" 
+                        [ngModel]="currentMonthlySavings()" 
+                        (ngModelChange)="currentMonthlySavings.set($event)"
+                        class="monthly-savings-input"
+                        placeholder="e.g. 30000"
+                      />
+                      <span class="unit-suffix">/ mo</span>
+                    </div>
+                    <div class="param-chips">
+                      <button type="button" (click)="setCurrentSavingsPreset(15000)">₹15,000</button>
+                      <button type="button" (click)="setCurrentSavingsPreset(25000)">₹25,000</button>
+                      <button type="button" (click)="setCurrentSavingsPreset(35000)">₹35,000</button>
+                      <button type="button" (click)="setCurrentSavingsPreset(50000)">₹50,000</button>
+                    </div>
+                  </div>
+
+                  <!-- 2. Allocation Control -->
+                  <div class="param-box alloc-param-box">
                     <div class="alloc-label-row">
                       <label>Target Asset Allocation (Risk Profile)</label>
                       <span class="alloc-total-tag" [class.error]="totalAllocation() !== 100">Total: {{ totalAllocation() }}%</span>
@@ -146,7 +178,7 @@
                   (click)="runAnalysis()"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                  <span>Re-run AI Analysis with Allocation</span>
+                  <span>Re-run AI Analysis with Updated Parameters</span>
                 </button>
               </div>
             }
